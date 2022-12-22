@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"name": "obsidian-inbox",
+	"version": "0.0.1",
+	"description": "Show in app notification if there is data to process in the \"inbox\" note.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
