@@ -20,7 +20,7 @@ Sets the [inbox path](#inbox-path) and [inbox base contents](#inbox-base-content
 
 Path for inbox note.
 
-For example, if your inbox note is in the root of your vault and called "Mobile Inbox", then the path would be "Mobile Inbox.md".
+For example, if your inbox note is in the root of your vault and called "Mobile Inbox", then the path would be "Mobile Inbox".
 
 ### Inbox base contents
 
@@ -36,4 +36,4 @@ then you should set your inbox base contents to match. That way, you will only b
 
 ### Inbox notice duration
 
-Duration to show Notice when there is data to process, in milliseconds. Set to 0 for infinite duration. Clear to use global default Notice duration.
+Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration.

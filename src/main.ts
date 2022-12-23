@@ -1,4 +1,5 @@
-import { Editor, MarkdownView, Notice, Plugin, TFile } from "obsidian";
+import { Editor, MarkdownView, Plugin, TFile } from "obsidian";
+import { ErrorNotice, InfoNotice } from "./Notice";
 import { InboxPluginSettings, DEFAULT_SETTINGS } from "./settings";
 import { SettingsTab } from "./SettingsTab";
 
@@ -9,18 +10,15 @@ export default class InboxPlugin extends Plugin {
 		await this.loadSettings();
 
 		this.addCommand({
-			id: "inbox-set-inbox-note",
+			id: "set-inbox-note",
 			name: "Set inbox note",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.settings.inboxNotePath = view.file.path;
+				this.settings.inboxNotePath = view.file.path.slice(0, -3); // strip off ".md" from end of path
 				this.settings.inboxNoteBaseContents = editor.getValue();
 				this.saveSettings();
 
-				new Notice(
-					`Inbox note path set to ${this.settings.inboxNotePath}`
-				);
-				new Notice(
-					`Inbox note base contents set to ${this.settings.inboxNoteBaseContents}`
+				new InfoNotice(
+					`Inbox note path set to ${this.settings.inboxNotePath}\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
 				);
 			},
 		});
@@ -52,18 +50,38 @@ export default class InboxPlugin extends Plugin {
 		}
 
 		const inboxNote = this.app.vault.getAbstractFileByPath(
-			this.settings.inboxNotePath
+			`${this.settings.inboxNotePath}.md`
 		);
 		if (!inboxNote || !(inboxNote instanceof TFile)) {
+			new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
 			return;
 		}
 
 		const contents = await this.app.vault.read(inboxNote);
 		if (contents.trim() !== this.settings.inboxNoteBaseContents.trim()) {
-			new Notice(
-				`Inbox\nYou have data to process in ${this.settings.inboxNotePath}`,
-				this.settings.noticeDurationMs
+			const notice = new InfoNotice(
+				`You have data to process in ${this.settings.inboxNotePath}\nClick to dismiss, or right click to view inbox note.`,
+				this.settings.noticeDurationSeconds !== undefined
+					? this.settings.noticeDurationSeconds * 1000
+					: undefined
 			);
+
+			notice.noticeEl.oncontextmenu = async () => {
+				const inboxNote = this.app.vault.getAbstractFileByPath(
+					`${this.settings.inboxNotePath}.md`
+				);
+				if (!(inboxNote instanceof TFile)) {
+					new ErrorNotice(
+						`Failed to find inbox note at path ${inboxNote}.`
+					);
+					return;
+				}
+
+				const leaf = this.app.workspace.getLeaf(true);
+				leaf.openFile(inboxNote);
+
+				notice.hide();
+			};
 		}
 	}
 }

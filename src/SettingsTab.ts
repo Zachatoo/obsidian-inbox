@@ -21,7 +21,7 @@ export class SettingsTab extends PluginSettingTab {
 			.setDesc("Path for inbox note.")
 			.addText((text) =>
 				text
-					.setPlaceholder("Inbox.md")
+					.setPlaceholder("Inbox")
 					.setValue(this.plugin.settings.inboxNotePath)
 					.onChange(async (value) => {
 						this.plugin.settings.inboxNotePath = value;
@@ -47,15 +47,16 @@ export class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Inbox notice duration")
 			.setDesc(
-				"Duration to show Notice when there is data to process, in milliseconds. Set to 0 for infinite duration. Clear to use global default Notice duration."
+				"Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration."
 			)
 			.addText((text) => {
 				text.setPlaceholder("0")
 					.setValue(
-						this.plugin.settings.noticeDurationMs?.toString() ?? ""
+						this.plugin.settings.noticeDurationSeconds?.toString() ??
+							""
 					)
 					.onChange(async (value) => {
-						this.plugin.settings.noticeDurationMs =
+						this.plugin.settings.noticeDurationSeconds =
 							value !== "" ? Number(value) : undefined;
 						await this.plugin.saveSettings();
 					});
