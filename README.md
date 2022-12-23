@@ -6,7 +6,7 @@ This plugin will let you know if there's content to process in your inbox note w
 
 ## Installation
 
-Use the [BRAT](obsidian://show-plugin?id=obsidian42-brat) Obsidian plugin to install this plugin. Generic installation instructions are available on that plugin's documentation.
+Use the [BRAT](https://github.com/TfTHacker/obsidian42-brat) Obsidian plugin to install this plugin. Generic installation instructions are available on that plugin's documentation.
 
 ## Commands
 
