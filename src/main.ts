@@ -61,7 +61,8 @@ export default class InboxPlugin extends Plugin {
 		const contents = await this.app.vault.read(inboxNote);
 		if (contents.trim() !== this.settings.inboxNoteBaseContents.trim()) {
 			new Notice(
-				`Inbox\nYou have data to process in ${this.settings.inboxNotePath}`
+				`Inbox\nYou have data to process in ${this.settings.inboxNotePath}`,
+				this.settings.noticeDurationMs
 			);
 		}
 	}

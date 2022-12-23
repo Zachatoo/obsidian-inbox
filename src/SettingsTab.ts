@@ -43,5 +43,22 @@ export class SettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("Inbox notice duration")
+			.setDesc(
+				"Duration to show Notice when there is data to process, in milliseconds. Set to 0 for infinite duration. Clear to use global default Notice duration."
+			)
+			.addText((text) => {
+				text.setPlaceholder("0")
+					.setValue(
+						this.plugin.settings.noticeDurationMs?.toString() ?? ""
+					)
+					.onChange(async (value) => {
+						this.plugin.settings.noticeDurationMs =
+							value !== "" ? Number(value) : undefined;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 }

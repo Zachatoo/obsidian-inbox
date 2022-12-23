@@ -33,3 +33,7 @@ For example, if the "unproccessed" version of your inbox note looks like this
 ```
 
 then you should set your inbox base contents to match. That way, you will only be notified if there's additional contents besides the heading.
+
+### Inbox notice duration
+
+Duration to show Notice when there is data to process, in milliseconds. Set to 0 for infinite duration. Clear to use global default Notice duration.
