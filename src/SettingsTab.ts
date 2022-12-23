@@ -32,7 +32,7 @@ export class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Inbox base contents")
 			.setDesc(
-				"If note matches this exactly, then you will not be notified."
+				"If note content matches this exactly, then you will not be notified."
 			)
 			.addTextArea((text) =>
 				text
