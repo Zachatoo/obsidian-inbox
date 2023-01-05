@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Plugin, TFile } from "obsidian";
+import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { InboxPluginSettings, DEFAULT_SETTINGS } from "./settings";
 import { SettingsTab } from "./SettingsTab";
@@ -59,29 +59,36 @@ export default class InboxPlugin extends Plugin {
 
 		const contents = await this.app.vault.read(inboxNote);
 		if (contents.trim() !== this.settings.inboxNoteBaseContents.trim()) {
+			const baseMessage = `You have data to process in ${this.settings.inboxNotePath}`;
+			const message = Platform.isDesktop
+				? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
+				: `${baseMessage}\nClick to dismiss.`;
 			const notice = new InfoNotice(
-				`You have data to process in ${this.settings.inboxNotePath}\nClick to dismiss, or right click to view inbox note.`,
+				message,
 				this.settings.noticeDurationSeconds !== undefined
-					? this.settings.noticeDurationSeconds * 1000
+					? this.settings.noticeDurationSeconds
 					: undefined
 			);
 
-			notice.noticeEl.oncontextmenu = async () => {
-				const inboxNote = this.app.vault.getAbstractFileByPath(
-					`${this.settings.inboxNotePath}.md`
-				);
-				if (!(inboxNote instanceof TFile)) {
-					new ErrorNotice(
-						`Failed to find inbox note at path ${inboxNote}.`
-					);
-					return;
-				}
-
-				const leaf = this.app.workspace.getLeaf(true);
-				leaf.openFile(inboxNote);
-
-				notice.hide();
-			};
+			if (Platform.isDesktop) {
+				notice.noticeEl.oncontextmenu = () => {
+					this.openInboxNote();
+					notice.hide();
+				};
+			}
 		}
+	}
+
+	openInboxNote() {
+		const inboxNote = this.app.vault.getAbstractFileByPath(
+			`${this.settings.inboxNotePath}.md`
+		);
+		if (!(inboxNote instanceof TFile)) {
+			new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
+			return;
+		}
+
+		const leaf = this.app.workspace.getLeaf(true);
+		leaf.openFile(inboxNote);
 	}
 }
