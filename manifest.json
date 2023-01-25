@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-inbox",
 	"name": "Inbox",
-	"version": "0.0.5",
+	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "Show in app notification if there is data to process in the \"inbox\" note.",
 	"author": "Zachatoo",
