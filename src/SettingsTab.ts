@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import InboxPlugin from "./main";
+import type InboxPlugin from "./main";
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: InboxPlugin;
@@ -13,6 +13,24 @@ export class SettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
+
+		containerEl.createEl("h2", { text: "Walkthrough" });
+
+		new Setting(containerEl)
+			.setName("Start walkthrough")
+			.setDesc(
+				"This will open a pane in the sidebar to guide you through how to use this plugin."
+			)
+			.addButton((component) => {
+				component
+					.setButtonText("Start")
+					.setCta()
+					.onClick(async () => {
+						this.plugin.settings.walkthroughStatus = "unstarted";
+						await this.plugin.saveSettings();
+						this.plugin.activateWalkthroughView();
+					});
+			});
 
 		containerEl.createEl("h2", { text: "Inbox Settings" });
 

@@ -1,7 +1,12 @@
 import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
-import { InboxPluginSettings, DEFAULT_SETTINGS } from "./settings";
+import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
 import { SettingsTab } from "./SettingsTab";
+import store from "./store";
+import {
+	InboxWalkthroughView,
+	VIEW_TYPE_WALKTHROUGH,
+} from "./walkthrough/WalkthroughView";
 
 export default class InboxPlugin extends Plugin {
 	settings: InboxPluginSettings;
@@ -9,13 +14,28 @@ export default class InboxPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		this.registerView(
+			VIEW_TYPE_WALKTHROUGH,
+			(leaf) => new InboxWalkthroughView(leaf, this)
+		);
+
 		this.addCommand({
 			id: "set-inbox-note",
 			name: "Set inbox note",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.settings.inboxNotePath = view.file.path.slice(0, -3); // strip off ".md" from end of path
 				this.settings.inboxNoteBaseContents = editor.getValue();
-				this.saveSettings();
+
+				const isWalkthroughOpen =
+					this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)
+						.length > 0;
+
+				if (
+					isWalkthroughOpen &&
+					this.settings.walkthroughStatus === "unstarted"
+				) {
+					store.next();
+				}
 
 				new InfoNotice(
 					`Inbox note path set to ${this.settings.inboxNotePath}\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
@@ -25,12 +45,21 @@ export default class InboxPlugin extends Plugin {
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		this.app.workspace.onLayoutReady(() =>
-			this.notifyIfInboxNeedsProcessing()
-		);
+		this.app.workspace.onLayoutReady(() => {
+			this.notifyIfInboxNeedsProcessing();
+
+			if (
+				this.settings.walkthroughStatus === "unstarted" &&
+				!this.settings.inboxNotePath
+			) {
+				this.activateWalkthroughView();
+			}
+		});
 	}
 
-	onunload() {}
+	onunload() {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
@@ -38,10 +67,24 @@ export default class InboxPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+		store.set(this);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async activateWalkthroughView() {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
+
+		await this.app.workspace.getRightLeaf(false).setViewState({
+			type: VIEW_TYPE_WALKTHROUGH,
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)[0]
+		);
 	}
 
 	async notifyIfInboxNeedsProcessing() {
