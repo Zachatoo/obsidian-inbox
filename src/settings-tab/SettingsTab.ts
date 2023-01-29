@@ -17,6 +17,10 @@ export class SettingsTab extends PluginSettingTab {
 
 		this.component = new SettingsTabComponent({
 			target: containerEl,
+			props: {
+				activateWalkthroughView: () =>
+					this.plugin.activateWalkthroughView(),
+			},
 		});
 	}
 }

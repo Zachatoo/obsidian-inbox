@@ -1,54 +1,50 @@
 import { derived, writable } from "svelte/store";
-import type InboxPlugin from "src/main";
 import { WALKTHROUGH_STATUS_OPTIONS } from "./walkthrough/WalkthroughStatus";
+import type { InboxPluginSettings } from "./settings";
 
 function createStore() {
-	const { subscribe, set, update } = writable<InboxPlugin>();
+	const { subscribe, set, update } = writable<InboxPluginSettings>();
 
 	const walkthrough = {
 		next() {
-			update((plugin) => {
+			update((settings) => {
 				const currentStepIndex = WALKTHROUGH_STATUS_OPTIONS.indexOf(
-					plugin.settings.walkthroughStatus
+					settings.walkthroughStatus
 				);
 				if (currentStepIndex + 1 < WALKTHROUGH_STATUS_OPTIONS.length) {
 					const nextStep =
 						WALKTHROUGH_STATUS_OPTIONS[currentStepIndex + 1];
-					plugin.settings.walkthroughStatus = nextStep;
+					settings.walkthroughStatus = nextStep;
 				}
-				plugin.saveSettings();
-				return plugin;
+				return settings;
 			});
 		},
 
 		back() {
-			update((plugin) => {
+			update((settings) => {
 				const currentStepIndex = WALKTHROUGH_STATUS_OPTIONS.indexOf(
-					plugin.settings.walkthroughStatus
+					settings.walkthroughStatus
 				);
 				if (currentStepIndex > 0) {
 					const nextStep =
 						WALKTHROUGH_STATUS_OPTIONS[currentStepIndex - 1];
-					plugin.settings.walkthroughStatus = nextStep;
+					settings.walkthroughStatus = nextStep;
 				}
-				plugin.saveSettings();
-				return plugin;
+				return settings;
 			});
 		},
 
 		complete() {
-			update((plugin) => {
-				plugin.settings.walkthroughStatus = "completed";
-				plugin.saveSettings();
-				return plugin;
+			update((settings) => {
+				settings.walkthroughStatus = "completed";
+				return settings;
 			});
 		},
 
 		reset() {
-			update((plugin) => {
-				plugin.settings.walkthroughStatus = "setCompareType";
-				plugin.saveSettings();
-				return plugin;
+			update((settings) => {
+				settings.walkthroughStatus = "setCompareType";
+				return settings;
 			});
 		},
 	};
@@ -64,11 +60,9 @@ const store = createStore();
 
 export default store;
 
-export const currentWalkthroughStep = derived(store, ($plugin) => {
-	if ($plugin?.settings?.walkthroughStatus) {
-		return WALKTHROUGH_STATUS_OPTIONS.indexOf(
-			$plugin.settings.walkthroughStatus
-		);
+export const currentWalkthroughStep = derived(store, ($settings) => {
+	if ($settings?.walkthroughStatus) {
+		return WALKTHROUGH_STATUS_OPTIONS.indexOf($settings.walkthroughStatus);
 	}
 	return 0;
 });

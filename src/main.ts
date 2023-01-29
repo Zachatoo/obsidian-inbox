@@ -2,7 +2,7 @@ import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
-import pluginStore from "./store";
+import store from "./store";
 import {
 	InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
@@ -15,6 +15,13 @@ export default class InboxPlugin extends Plugin {
 	async onload() {
 		this.hasPerformedCheck = false;
 		await this.loadSettings();
+
+		this.register(
+			store.subscribe(async (settings) => {
+				this.settings = settings;
+				await this.saveSettings();
+			})
+		);
 
 		this.registerView(
 			VIEW_TYPE_WALKTHROUGH,
@@ -41,7 +48,7 @@ export default class InboxPlugin extends Plugin {
 					isWalkthroughOpen &&
 					this.settings.walkthroughStatus === "runSetInboxNoteCommand"
 				) {
-					pluginStore.walkthrough.next();
+					store.walkthrough.next();
 				}
 
 				this.saveSettings();
@@ -92,7 +99,7 @@ export default class InboxPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
-		pluginStore.set(this);
+		store.set(this.settings);
 	}
 
 	async saveSettings() {

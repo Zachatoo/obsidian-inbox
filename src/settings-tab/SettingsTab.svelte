@@ -6,12 +6,14 @@
 		TextArea,
 		TextInput,
 	} from "obsidian-svelte";
-	import pluginStore from "src/store";
+	import store from "src/store";
 	import { CompareTypeSelect } from "src/components";
 
+	export let activateWalkthroughView: () => Promise<void>;
+
 	async function startWalkthrough() {
-		pluginStore.walkthrough.reset();
-		$pluginStore.activateWalkthroughView();
+		store.walkthrough.reset();
+		await activateWalkthroughView();
 	}
 </script>
 
@@ -32,10 +34,9 @@
 >
 	<TextInput
 		placeholder="Inbox"
-		value={$pluginStore.settings.inboxNotePath}
+		value={$store.inboxNotePath}
 		on:input={({ detail }) => {
-			$pluginStore.settings.inboxNotePath = detail;
-			$pluginStore.saveSettings();
+			$store.inboxNotePath = detail;
 		}}
 	/>
 </SettingItem>
@@ -45,25 +46,23 @@
 	description="What to compare the inbox note contents to when deciding whether or not to notify. 'Compare to last tracked' will compare to a snapshot from when Obsidian was last closed. 'Compare to base' will compare to a base contents that you define."
 >
 	<CompareTypeSelect
-		value={$pluginStore.settings.compareType}
+		value={$store.compareType}
 		on:change={({ detail }) => {
-			$pluginStore.settings.compareType = detail;
-			$pluginStore.saveSettings();
+			$store.compareType = detail;
 		}}
 	/>
 </SettingItem>
 
-{#if $pluginStore.settings.compareType === "compareToBase"}
+{#if $store.compareType === "compareToBase"}
 	<SettingItem
 		name="Inbox base contents"
 		description="If note content matches this exactly, then you will not be notified."
 	>
 		<TextArea
 			placeholder="# Inbox\n"
-			value={$pluginStore.settings.inboxNoteBaseContents}
+			value={$store.inboxNoteBaseContents}
 			on:input={({ detail }) => {
-				$pluginStore.settings.inboxNoteBaseContents = detail;
-				$pluginStore.saveSettings();
+				$store.inboxNoteBaseContents = detail;
 			}}
 			rows={3}
 		/>
@@ -76,10 +75,9 @@
 >
 	<NumberInput
 		placeholder="0"
-		value={$pluginStore.settings.noticeDurationSeconds ?? null}
+		value={$store.noticeDurationSeconds ?? null}
 		on:input={({ detail }) => {
-			$pluginStore.settings.noticeDurationSeconds = detail ?? undefined;
-			$pluginStore.saveSettings();
+			$store.noticeDurationSeconds = detail ?? undefined;
 		}}
 	/>
 </SettingItem>

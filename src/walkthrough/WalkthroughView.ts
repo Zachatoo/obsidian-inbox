@@ -28,10 +28,17 @@ export class InboxWalkthroughView extends ItemView {
 	async onOpen() {
 		this.component = new InboxWalkthroughComponent({
 			target: this.contentEl,
+			props: {
+				closeWalthroughView: () => this.closeWalkthroughView(),
+			},
 		});
 	}
 
 	async onClose() {
 		this.component.$destroy();
+	}
+
+	closeWalkthroughView() {
+		this.plugin.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
 	}
 }

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { CompareTypeSelect } from "src/components";
-	import pluginStore, { currentWalkthroughStep } from "src/store";
+	import store, { currentWalkthroughStep } from "src/store";
 	import { WALKTHROUGH_STATUS_OPTIONS } from "./WalkthroughStatus";
-	import { VIEW_TYPE_WALKTHROUGH } from "./WalkthroughView";
+
+	export let closeWalthroughView: () => void;
 
 	function handleCloseWalkthrough() {
-		$pluginStore.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
-		pluginStore.walkthrough.complete();
+		closeWalthroughView();
+		store.walkthrough.complete();
 	}
 </script>
 
@@ -14,7 +15,7 @@
 
 <h2>Step {$currentWalkthroughStep}</h2>
 
-{#if $pluginStore.settings.walkthroughStatus === "setCompareType"}
+{#if $store.walkthroughStatus === "setCompareType"}
 	<p>Looks like you haven't setup Obsidian Inbox yet! Let's get started!</p>
 
 	<p>
@@ -23,10 +24,9 @@
 	</p>
 
 	<CompareTypeSelect
-		value={$pluginStore.settings.compareType}
+		value={$store.compareType}
 		on:change={({ detail }) => {
-			$pluginStore.settings.compareType = detail;
-			$pluginStore.saveSettings();
+			$store.compareType = detail;
 		}}
 	/>
 
@@ -41,7 +41,7 @@
 		note, even if there haven't been any changes to your note since your
 		last startup.
 	</p>
-{:else if $pluginStore.settings.walkthroughStatus === "runSetInboxNoteCommand"}
+{:else if $store.walkthroughStatus === "runSetInboxNoteCommand"}
 	<p>Let's setup which note will be your inbox note.</p>
 
 	<ol>
@@ -49,7 +49,7 @@
 			Open the note that you want to be your "Inbox" note. It can be
 			called whatever you want, and can be anywhere in your vault.
 		</li>
-		{#if $pluginStore.settings.compareType === "compareToBase"}
+		{#if $store.compareType === "compareToBase"}
 			<li>
 				Set the default state of your inbox note. For example, if your
 				note should just have a heading in it when you don't want a
@@ -62,10 +62,10 @@
 			(<code>ctrl p</code> on Windows) and run the "Set inbox note" command.
 		</li>
 	</ol>
-{:else if $pluginStore.settings.walkthroughStatus === "restartObsidian"}
+{:else if $store.walkthroughStatus === "restartObsidian"}
 	<p>Alright, let's verify that this is working.</p>
 
-	{#if $pluginStore.settings.compareType === "compareToBase"}
+	{#if $store.compareType === "compareToBase"}
 		<ol>
 			<li>
 				Restart Obsidian. You should <i>not</i> get a notification, since
@@ -80,7 +80,7 @@
 			</li>
 		</ol>
 	{/if}
-	{#if $pluginStore.settings.compareType === "compareToLastTracked"}
+	{#if $store.compareType === "compareToLastTracked"}
 		<ol>
 			<li>
 				Restart Obsidian. You should <i>not</i> get a notification, since
@@ -88,7 +88,7 @@
 			</li>
 			<li>
 				Close Obsidian, and add or remove some content to your Inbox
-				note (located at "{$pluginStore.settings.inboxNotePath}.md").
+				note (located at "{$store.inboxNotePath}.md").
 			</li>
 			<li>
 				Open Obsidian. You <i>should</i> get a notification, because your
@@ -98,7 +98,7 @@
 	{/if}
 
 	<p>Click the "Next" button below to continue.</p>
-{:else if $pluginStore.settings.walkthroughStatus === "completed"}
+{:else if $store.walkthroughStatus === "completed"}
 	<p>You've completed the walkthrough!</p>
 
 	<p>
@@ -108,11 +108,11 @@
 {/if}
 
 <div class="flex">
-	{#if $pluginStore.settings.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[1]}
-		<button on:click={pluginStore.walkthrough.back}>Back</button>
+	{#if $store.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[1]}
+		<button on:click={store.walkthrough.back}>Back</button>
 	{/if}
-	{#if $pluginStore.settings.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[WALKTHROUGH_STATUS_OPTIONS.length - 1]}
-		<button class="flex ml-auto" on:click={pluginStore.walkthrough.next}>
+	{#if $store.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[WALKTHROUGH_STATUS_OPTIONS.length - 1]}
+		<button class="flex ml-auto" on:click={store.walkthrough.next}>
 			Next
 		</button>
 	{:else}
