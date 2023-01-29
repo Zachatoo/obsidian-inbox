@@ -9,17 +9,6 @@
 	import pluginStore from "src/store";
 	import { CompareTypeSelect } from "src/components";
 
-	const compareTypeOptions = [
-		{
-			label: "Compare to last tracked",
-			value: "compareToLastTracked",
-		},
-		{
-			label: "Compare to base",
-			value: "compareToBase",
-		},
-	];
-
 	async function startWalkthrough() {
 		pluginStore.walkthrough.reset();
 		$pluginStore.activateWalkthroughView();
