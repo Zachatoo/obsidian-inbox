@@ -37,7 +37,10 @@
 
 <h2>Inbox Settings</h2>
 
-<SettingItem name="Inbox path" description="Path for inbox note.">
+<SettingItem
+	name="Inbox path"
+	description="Path for inbox note. Do not include .md at the end of the path."
+>
 	<TextInput
 		placeholder="Inbox"
 		value={$pluginStore.settings.inboxNotePath}
