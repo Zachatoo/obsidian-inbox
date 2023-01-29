@@ -40,12 +40,8 @@ export default class InboxPlugin extends Plugin {
 					this.settings.inboxNoteContents = editor.getValue().trim();
 				}
 
-				const isWalkthroughOpen =
-					this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)
-						.length > 0;
-
 				if (
-					isWalkthroughOpen &&
+					this.getIsWalkthroughViewOpen() &&
 					this.settings.walkthroughStatus === "runSetInboxNoteCommand"
 				) {
 					store.walkthrough.next();
@@ -116,6 +112,12 @@ export default class InboxPlugin extends Plugin {
 
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)[0]
+		);
+	}
+
+	getIsWalkthroughViewOpen() {
+		return (
+			this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH).length > 0
 		);
 	}
 
