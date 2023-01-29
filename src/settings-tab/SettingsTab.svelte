@@ -2,12 +2,12 @@
 	import {
 		Button,
 		NumberInput,
-		Select,
 		SettingItem,
 		TextArea,
 		TextInput,
 	} from "obsidian-svelte";
 	import pluginStore from "src/store";
+	import { CompareTypeSelect } from "src/components";
 
 	const compareTypeOptions = [
 		{
@@ -55,16 +55,10 @@
 	name="Compare type"
 	description="What to compare the inbox note contents to when deciding whether or not to notify. 'Compare to last tracked' will compare to a snapshot from when Obsidian was last closed. 'Compare to base' will compare to a base contents that you define."
 >
-	<Select
+	<CompareTypeSelect
 		value={$pluginStore.settings.compareType}
-		options={compareTypeOptions}
 		on:change={({ detail }) => {
-			if (
-				detail === "compareToBase" ||
-				detail === "compareToLastTracked"
-			) {
-				$pluginStore.settings.compareType = detail;
-			}
+			$pluginStore.settings.compareType = detail;
 			$pluginStore.saveSettings();
 		}}
 	/>
