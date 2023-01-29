@@ -39,7 +39,7 @@ export default class InboxPlugin extends Plugin {
 
 				if (
 					isWalkthroughOpen &&
-					this.settings.walkthroughStatus === "unstarted"
+					this.settings.walkthroughStatus === "runSetInboxNoteCommand"
 				) {
 					pluginStore.walkthrough.next();
 				}
@@ -71,10 +71,9 @@ export default class InboxPlugin extends Plugin {
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		this.app.workspace.onLayoutReady(async () => {
-			if (
-				this.settings.walkthroughStatus === "unstarted" &&
-				!this.settings.inboxNotePath
-			) {
+			if (this.settings.walkthroughStatus === "unstarted") {
+				this.settings.walkthroughStatus = "setCompareType";
+				await this.saveSettings();
 				this.activateWalkthroughView();
 			} else {
 				await this.notifyIfInboxNeedsProcessing();

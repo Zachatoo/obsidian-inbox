@@ -46,7 +46,7 @@ function createStore() {
 
 		reset() {
 			update((plugin) => {
-				plugin.settings.walkthroughStatus = "unstarted";
+				plugin.settings.walkthroughStatus = "setCompareType";
 				plugin.saveSettings();
 				return plugin;
 			});
@@ -66,10 +66,8 @@ export default store;
 
 export const currentWalkthroughStep = derived(store, ($plugin) => {
 	if ($plugin?.settings?.walkthroughStatus) {
-		return (
-			WALKTHROUGH_STATUS_OPTIONS.indexOf(
-				$plugin.settings.walkthroughStatus
-			) + 1
+		return WALKTHROUGH_STATUS_OPTIONS.indexOf(
+			$plugin.settings.walkthroughStatus
 		);
 	}
 	return 0;

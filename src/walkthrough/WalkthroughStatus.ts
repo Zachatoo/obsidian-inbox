@@ -1,6 +1,8 @@
 export const WALKTHROUGH_STATUS_OPTIONS = [
 	"unstarted",
-	"ranSetInboxNoteCommand",
+	"setCompareType",
+	"runSetInboxNoteCommand",
+	"restartObsidian",
 	"completed",
 ] as const;
 
