@@ -2,7 +2,7 @@ import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
-import store from "./store";
+import pluginStore from "./store";
 import {
 	InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
@@ -26,7 +26,12 @@ export default class InboxPlugin extends Plugin {
 			name: "Set inbox note",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
 				this.settings.inboxNotePath = view.file.path.slice(0, -3); // strip off ".md" from end of path
-				this.settings.inboxNoteBaseContents = editor.getValue();
+				if (this.settings.compareType === "compareToBase") {
+					this.settings.inboxNoteBaseContents = editor.getValue();
+				}
+				if (this.settings.compareType === "compareToLastTracked") {
+					this.settings.inboxNoteContents = editor.getValue().trim();
+				}
 
 				const isWalkthroughOpen =
 					this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)
@@ -36,11 +41,17 @@ export default class InboxPlugin extends Plugin {
 					isWalkthroughOpen &&
 					this.settings.walkthroughStatus === "unstarted"
 				) {
-					store.walkthrough.next();
+					pluginStore.walkthrough.next();
 				}
 
+				this.saveSettings();
+
 				new InfoNotice(
-					`Inbox note path set to ${this.settings.inboxNotePath}\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
+					`Inbox note path set to ${this.settings.inboxNotePath}${
+						this.settings.compareType === "compareToBase"
+							? `\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
+							: ""
+					}`
 				);
 			},
 		});
@@ -82,7 +93,7 @@ export default class InboxPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
-		store.set(this);
+		pluginStore.set(this);
 	}
 
 	async saveSettings() {
