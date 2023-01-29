@@ -1,7 +1,7 @@
 import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
-import { SettingsTab } from "./SettingsTab";
+import { SettingsTab } from "./settings-tab/SettingsTab";
 import store from "./store";
 import {
 	InboxWalkthroughView,
@@ -10,8 +10,10 @@ import {
 
 export default class InboxPlugin extends Plugin {
 	settings: InboxPluginSettings;
+	hasPerformedCheck: boolean;
 
 	async onload() {
+		this.hasPerformedCheck = false;
 		await this.loadSettings();
 
 		this.registerView(
@@ -34,7 +36,7 @@ export default class InboxPlugin extends Plugin {
 					isWalkthroughOpen &&
 					this.settings.walkthroughStatus === "unstarted"
 				) {
-					store.next();
+					store.walkthrough.next();
 				}
 
 				new InfoNotice(
@@ -43,22 +45,35 @@ export default class InboxPlugin extends Plugin {
 			},
 		});
 
+		this.registerEvent(
+			this.app.metadataCache.on("changed", async (file, data, cache) => {
+				if (
+					this.hasPerformedCheck &&
+					file.basename === this.settings.inboxNotePath
+				) {
+					this.settings.inboxNoteContents = data.trim();
+					await this.saveSettings();
+				}
+			})
+		);
+
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		this.app.workspace.onLayoutReady(() => {
-			this.notifyIfInboxNeedsProcessing();
-
+		this.app.workspace.onLayoutReady(async () => {
 			if (
 				this.settings.walkthroughStatus === "unstarted" &&
 				!this.settings.inboxNotePath
 			) {
 				this.activateWalkthroughView();
+			} else {
+				await this.notifyIfInboxNeedsProcessing();
 			}
 		});
 	}
 
 	onunload() {
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
+		this.hasPerformedCheck = false;
 	}
 
 	async loadSettings() {
@@ -100,8 +115,23 @@ export default class InboxPlugin extends Plugin {
 			return;
 		}
 
-		const contents = await this.app.vault.read(inboxNote);
-		if (contents.trim() !== this.settings.inboxNoteBaseContents.trim()) {
+		const contents = (await this.app.vault.read(inboxNote)).trim();
+
+		let shouldNotify = false;
+		switch (this.settings.compareType) {
+			case "compareToBase":
+				shouldNotify =
+					contents !== this.settings.inboxNoteBaseContents.trim();
+				break;
+			case "compareToLastTracked":
+				shouldNotify =
+					contents !== this.settings.inboxNoteContents.trim();
+				break;
+			default:
+				break;
+		}
+
+		if (shouldNotify) {
 			const baseMessage = `You have data to process in ${this.settings.inboxNotePath}`;
 			const message = Platform.isDesktop
 				? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
@@ -120,6 +150,10 @@ export default class InboxPlugin extends Plugin {
 				};
 			}
 		}
+
+		this.hasPerformedCheck = true;
+		this.settings.inboxNoteContents = contents;
+		await this.saveSettings();
 	}
 
 	openInboxNote() {

@@ -1,17 +1,17 @@
 <script lang="ts">
-	import pluginStore, { step } from "src/store";
+	import pluginStore, { currentWalkthroughStep } from "src/store";
 	import { WALKTHROUGH_STATUS_OPTIONS } from "./WalkthroughStatus";
 	import { VIEW_TYPE_WALKTHROUGH } from "./WalkthroughView";
 
 	function handleCloseWalkthrough() {
 		$pluginStore.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
-		pluginStore.complete();
+		pluginStore.walkthrough.complete();
 	}
 </script>
 
 <h1>Obsidian Inbox Walkthrough</h1>
 
-<h2>Step {$step}</h2>
+<h2>Step {$currentWalkthroughStep}</h2>
 
 {#if $pluginStore.settings.walkthroughStatus === "unstarted"}
 	<p>Looks like you haven't setup Obsidian Inbox yet! Let's get started!</p>
@@ -67,10 +67,12 @@
 
 <div class="flex">
 	{#if $pluginStore.settings.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[0]}
-		<button on:click={pluginStore.back}>Back</button>
+		<button on:click={pluginStore.walkthrough.back}>Back</button>
 	{/if}
 	{#if $pluginStore.settings.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[WALKTHROUGH_STATUS_OPTIONS.length - 1]}
-		<button class="flex ml-auto" on:click={pluginStore.next}>Next</button>
+		<button class="flex ml-auto" on:click={pluginStore.walkthrough.next}>
+			Next
+		</button>
 	{:else}
 		<button class="flex ml-auto" on:click={handleCloseWalkthrough}>
 			Close
