@@ -53,7 +53,7 @@
 	/>
 </SettingItem>
 
-{#if $store.compareType === "compareToBase"}
+<div class={$store.compareType !== "compareToBase" ? "hidden" : ""}>
 	<SettingItem
 		name="Inbox base contents"
 		description="If note content matches this exactly, then you will not be notified."
@@ -67,7 +67,7 @@
 			rows={3}
 		/>
 	</SettingItem>
-{/if}
+</div>
 
 <SettingItem
 	name="Inbox notice duration"
@@ -81,3 +81,9 @@
 		}}
 	/>
 </SettingItem>
+
+<style>
+	.hidden {
+		display: none;
+	}
+</style>
