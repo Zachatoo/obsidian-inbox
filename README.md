@@ -41,3 +41,7 @@ then you should set your inbox base contents to match. That way, you will only b
 ### Inbox notice duration
 
 Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration.
+
+## Attributions
+
+-   Thank you to marcusolsson for [obsidian-svelte](https://github.com/marcusolsson/obsidian-svelte) that I used for creating many of the UI elements.
