@@ -7,6 +7,7 @@ import {
 	InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
+import { findMarkdownLeavesMatchingPath } from "./workspace-helpers";
 
 export default class InboxPlugin extends Plugin {
 	settings: InboxPluginSettings;
@@ -161,16 +162,27 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	openInboxNote() {
-		const inboxNote = this.app.vault.getAbstractFileByPath(
-			`${this.settings.inboxNotePath}.md`
+		const normalizedPath = `${this.settings.inboxNotePath}.md`;
+
+		const inboxNoteLeaves = findMarkdownLeavesMatchingPath(
+			this.app.workspace,
+			normalizedPath
 		);
-		if (!(inboxNote instanceof TFile)) {
-			new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
+		if (inboxNoteLeaves.some(Boolean)) {
+			this.app.workspace.setActiveLeaf(inboxNoteLeaves[0], {
+				focus: true,
+			});
 			return;
 		}
 
-		const leaf = this.app.workspace.getLeaf(true);
-		leaf.openFile(inboxNote);
+		const inboxNote = this.app.vault.getAbstractFileByPath(normalizedPath);
+		if (inboxNote instanceof TFile) {
+			const leaf = this.app.workspace.getLeaf(true);
+			leaf.openFile(inboxNote);
+			return;
+		}
+
+		new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
 	}
 
 	setInboxNote(leaf: MarkdownView) {
