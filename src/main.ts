@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Platform, Plugin, TFile } from "obsidian";
+import { MarkdownView, Platform, Plugin, TFile } from "obsidian";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
