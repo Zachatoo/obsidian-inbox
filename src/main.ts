@@ -31,31 +31,16 @@ export default class InboxPlugin extends Plugin {
 		this.addCommand({
 			id: "set-inbox-note",
 			name: "Set inbox note",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				this.settings.inboxNotePath = view.file.path.slice(0, -3); // strip off ".md" from end of path
-				if (this.settings.compareType === "compareToBase") {
-					this.settings.inboxNoteBaseContents = editor.getValue();
+			checkCallback: (checking) => {
+				const activeLeaf =
+					this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (!activeLeaf) {
+					return false;
 				}
-				if (this.settings.compareType === "compareToLastTracked") {
-					this.settings.inboxNoteContents = editor.getValue().trim();
+				if (checking) {
+					return true;
 				}
-
-				if (
-					this.getIsWalkthroughViewOpen() &&
-					this.settings.walkthroughStatus === "runSetInboxNoteCommand"
-				) {
-					store.walkthrough.next();
-				}
-
-				this.saveSettings();
-
-				new InfoNotice(
-					`Inbox note path set to ${this.settings.inboxNotePath}${
-						this.settings.compareType === "compareToBase"
-							? `\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
-							: ""
-					}`
-				);
+				this.setInboxNote(activeLeaf);
 			},
 		});
 
@@ -186,5 +171,32 @@ export default class InboxPlugin extends Plugin {
 
 		const leaf = this.app.workspace.getLeaf(true);
 		leaf.openFile(inboxNote);
+	}
+
+	setInboxNote(leaf: MarkdownView) {
+		this.settings.inboxNotePath = leaf.file.path.slice(0, -3); // strip off ".md" from end of path
+		if (this.settings.compareType === "compareToBase") {
+			this.settings.inboxNoteBaseContents = leaf.editor.getValue();
+		}
+		if (this.settings.compareType === "compareToLastTracked") {
+			this.settings.inboxNoteContents = leaf.editor.getValue().trim();
+		}
+
+		if (
+			this.getIsWalkthroughViewOpen() &&
+			this.settings.walkthroughStatus === "runSetInboxNoteCommand"
+		) {
+			store.walkthrough.next();
+		}
+
+		this.saveSettings();
+
+		new InfoNotice(
+			`Inbox note path set to ${this.settings.inboxNotePath}${
+				this.settings.compareType === "compareToBase"
+					? `\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
+					: ""
+			}`
+		);
 	}
 }
