@@ -5,7 +5,7 @@ export interface InboxPluginSettings {
 	compareType: "compareToBase" | "compareToLastTracked";
 	inboxNoteBaseContents: string; // used when comparing to base
 	inboxNoteContents: string; // used when comparing to last tracked
-	noticeDurationSeconds: number | undefined;
+	noticeDurationSeconds: number | null;
 	walkthroughStatus: WalkthroughStatus;
 }
 
@@ -14,6 +14,6 @@ export const DEFAULT_SETTINGS: InboxPluginSettings = {
 	compareType: "compareToLastTracked",
 	inboxNoteBaseContents: "",
 	inboxNoteContents: "",
-	noticeDurationSeconds: undefined,
+	noticeDurationSeconds: null,
 	walkthroughStatus: "unstarted",
 };

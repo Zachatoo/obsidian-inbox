@@ -75,9 +75,9 @@
 >
 	<NumberInput
 		placeholder="0"
-		value={$store.noticeDurationSeconds ?? null}
+		value={$store.noticeDurationSeconds}
 		on:input={({ detail }) => {
-			$store.noticeDurationSeconds = detail ?? undefined;
+			$store.noticeDurationSeconds = detail;
 		}}
 	/>
 </SettingItem>

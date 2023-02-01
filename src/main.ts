@@ -143,9 +143,7 @@ export default class InboxPlugin extends Plugin {
 				: `${baseMessage}\nClick to dismiss.`;
 			const notice = new InfoNotice(
 				message,
-				this.settings.noticeDurationSeconds !== undefined
-					? this.settings.noticeDurationSeconds
-					: undefined
+				this.settings.noticeDurationSeconds ?? undefined
 			);
 
 			if (Platform.isDesktop) {
