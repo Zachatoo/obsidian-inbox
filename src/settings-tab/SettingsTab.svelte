@@ -59,7 +59,7 @@
 		description="If note content matches this exactly, then you will not be notified."
 	>
 		<TextArea
-			placeholder="# Inbox\n"
+			placeholder="# Inbox"
 			value={$store.inboxNoteBaseContents}
 			on:input={({ detail }) => {
 				$store.inboxNoteBaseContents = detail;
