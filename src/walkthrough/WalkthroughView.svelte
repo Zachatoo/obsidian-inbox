@@ -88,7 +88,7 @@
 			</li>
 			<li>
 				Close Obsidian, and add or remove some content to your Inbox
-				note (located at "{$store.inboxNotePath}.md").
+				note (located at "{$store.inboxNotePath}").
 			</li>
 			<li>
 				Open Obsidian. You <i>should</i> get a notification, because your

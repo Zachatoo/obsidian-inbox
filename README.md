@@ -24,7 +24,7 @@ Sets the [inbox path](#inbox-path) and [inbox base contents](#inbox-base-content
 
 Path for inbox note.
 
-For example, if your inbox note is in the root of your vault and called "Mobile Inbox", then the path would be "Mobile Inbox".
+For example, if your inbox note is in the root of your vault and called "Mobile Inbox", then the path would be "Mobile Inbox.md".
 
 ### Compare type
 

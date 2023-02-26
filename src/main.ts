@@ -113,7 +113,7 @@ export default class InboxPlugin extends Plugin {
 		}
 
 		const inboxNote = this.app.vault.getAbstractFileByPath(
-			`${this.settings.inboxNotePath}.md`
+			this.settings.inboxNotePath
 		);
 		if (!inboxNote || !(inboxNote instanceof TFile)) {
 			new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
@@ -160,11 +160,9 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	openInboxNote() {
-		const normalizedPath = `${this.settings.inboxNotePath}.md`;
-
 		const inboxNoteLeaves = findMarkdownLeavesMatchingPath(
 			this.app.workspace,
-			normalizedPath
+			this.settings.inboxNotePath
 		);
 		if (inboxNoteLeaves.some(Boolean)) {
 			this.app.workspace.setActiveLeaf(inboxNoteLeaves[0], {
@@ -173,7 +171,9 @@ export default class InboxPlugin extends Plugin {
 			return;
 		}
 
-		const inboxNote = this.app.vault.getAbstractFileByPath(normalizedPath);
+		const inboxNote = this.app.vault.getAbstractFileByPath(
+			this.settings.inboxNotePath
+		);
 		if (inboxNote instanceof TFile) {
 			const leaf = this.app.workspace.getLeaf(true);
 			leaf.openFile(inboxNote);
@@ -184,7 +184,8 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	setInboxNote(leaf: MarkdownView) {
-		this.settings.inboxNotePath = leaf.file.path.slice(0, -3); // strip off ".md" from end of path
+		this.settings.inboxNotePath = leaf.file.path;
+
 		if (this.settings.compareType === "compareToBase") {
 			this.settings.inboxNoteBaseContents = leaf.editor.getValue();
 		}
@@ -201,12 +202,12 @@ export default class InboxPlugin extends Plugin {
 
 		this.saveSettings();
 
-		new InfoNotice(
-			`Inbox note path set to ${this.settings.inboxNotePath}${
-				this.settings.compareType === "compareToBase"
-					? `\nInbox note base contents set to\n${this.settings.inboxNoteBaseContents}`
-					: ""
-			}`
-		);
+		let message = `Inbox note path set to ${this.settings.inboxNotePath}`;
+		if (this.settings.compareType === "compareToBase") {
+			message += `\nInbox note base contents set to\n${
+				this.settings.inboxNoteBaseContents || "<blank>"
+			}`;
+		}
+		new InfoNotice(message);
 	}
 }

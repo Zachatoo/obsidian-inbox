@@ -28,10 +28,7 @@
 
 <h2>Inbox Settings</h2>
 
-<SettingItem
-	name="Inbox path"
-	description="Path for inbox note. Do not include .md at the end of the path."
->
+<SettingItem name="Inbox path" description="Path for inbox note.">
 	<TextInput
 		placeholder="Inbox"
 		value={$store.inboxNotePath}
