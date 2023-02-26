@@ -1,4 +1,10 @@
-import { Platform, Plugin, TFile, type MarkdownFileInfo } from "obsidian";
+import {
+	Platform,
+	Plugin,
+	TFile,
+	WorkspaceLeaf,
+	type MarkdownFileInfo,
+} from "obsidian";
 import { getValueFromMarkdownFileInfo } from "./markdown-file-info-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import {
@@ -67,7 +73,7 @@ export default class InboxPlugin extends Plugin {
 			if (this.settings.walkthroughStatus === "unstarted") {
 				this.settings.walkthroughStatus = "setCompareType";
 				await this.saveSettings();
-				this.activateWalkthroughView();
+				this.ensureWalkthroughViewExists();
 			} else {
 				await this.notifyIfInboxNeedsProcessing();
 			}
@@ -95,17 +101,27 @@ export default class InboxPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	async activateWalkthroughView() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
+	ensureWalkthroughViewExists(active = false) {
+		const { workspace } = this.app;
 
-		await this.app.workspace.getRightLeaf(false).setViewState({
-			type: VIEW_TYPE_WALKTHROUGH,
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE_WALKTHROUGH)[0]
+		let leaf: WorkspaceLeaf;
+		const existingPluginLeaves = workspace.getLeavesOfType(
+			VIEW_TYPE_WALKTHROUGH
 		);
+
+		// There's already an existing leaf with our view, do not create leaf
+		if (existingPluginLeaves.length > 0) {
+			leaf = existingPluginLeaves[0];
+		} else {
+			// View doesn't exist yet, reate it and make it visible
+			leaf = workspace.getRightLeaf(false);
+			workspace.revealLeaf(leaf);
+			leaf.setViewState({ type: VIEW_TYPE_WALKTHROUGH });
+		}
+
+		if (active) {
+			workspace.setActiveLeaf(leaf);
+		}
 	}
 
 	getIsWalkthroughViewOpen() {
