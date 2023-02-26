@@ -1,4 +1,5 @@
-import { MarkdownView, Platform, Plugin, TFile } from "obsidian";
+import { Platform, Plugin, TFile, type MarkdownFileInfo } from "obsidian";
+import { getValueFromMarkdownFileInfo } from "./markdown-file-info-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
@@ -33,15 +34,14 @@ export default class InboxPlugin extends Plugin {
 			id: "set-inbox-note",
 			name: "Set inbox note",
 			checkCallback: (checking) => {
-				const activeLeaf =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (!activeLeaf) {
+				const { activeEditor: fileInfo } = app.workspace;
+				if (!fileInfo || !fileInfo.file || !fileInfo.editor) {
 					return false;
 				}
 				if (checking) {
 					return true;
 				}
-				this.setInboxNote(activeLeaf);
+				this.setInboxNote(fileInfo);
 			},
 		});
 
@@ -183,14 +183,21 @@ export default class InboxPlugin extends Plugin {
 		new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
 	}
 
-	setInboxNote(leaf: MarkdownView) {
-		this.settings.inboxNotePath = leaf.file.path;
+	setInboxNote(fileInfo: MarkdownFileInfo) {
+		if (!fileInfo.file || !fileInfo.editor) {
+			new ErrorNotice("Failed to set inbox note, no editor detected.");
+			return;
+		}
+
+		this.settings.inboxNotePath = fileInfo.file.path;
 
 		if (this.settings.compareType === "compareToBase") {
-			this.settings.inboxNoteBaseContents = leaf.editor.getValue();
+			this.settings.inboxNoteBaseContents =
+				getValueFromMarkdownFileInfo(fileInfo);
 		}
 		if (this.settings.compareType === "compareToLastTracked") {
-			this.settings.inboxNoteContents = leaf.editor.getValue().trim();
+			this.settings.inboxNoteContents =
+				getValueFromMarkdownFileInfo(fileInfo).trim();
 		}
 
 		if (
