@@ -17,3 +17,11 @@ export const DEFAULT_SETTINGS: InboxPluginSettings = {
 	noticeDurationSeconds: null,
 	walkthroughStatus: "unstarted",
 };
+
+export function migrateSettings(settings: InboxPluginSettings) {
+	if (settings.inboxNotePath && !settings.inboxNotePath.endsWith(".md")) {
+		settings.inboxNotePath += ".md";
+	}
+
+	return settings;
+}

@@ -1,7 +1,11 @@
 import { Platform, Plugin, TFile, type MarkdownFileInfo } from "obsidian";
 import { getValueFromMarkdownFileInfo } from "./markdown-file-info-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
-import { DEFAULT_SETTINGS, type InboxPluginSettings } from "./settings";
+import {
+	DEFAULT_SETTINGS,
+	migrateSettings,
+	type InboxPluginSettings,
+} from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
 import store from "./store";
 import {
@@ -81,6 +85,9 @@ export default class InboxPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+
+		this.settings = migrateSettings(this.settings);
+
 		store.set(this.settings);
 	}
 
