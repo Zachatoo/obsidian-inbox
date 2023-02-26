@@ -71,8 +71,7 @@ export default class InboxPlugin extends Plugin {
 
 		this.app.workspace.onLayoutReady(async () => {
 			if (this.settings.walkthroughStatus === "unstarted") {
-				this.settings.walkthroughStatus = "setCompareType";
-				await this.saveSettings();
+				store.walkthrough.reset();
 				this.ensureWalkthroughViewExists();
 			} else {
 				await this.notifyIfInboxNeedsProcessing();
