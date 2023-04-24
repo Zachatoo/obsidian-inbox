@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-inbox",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Show in app notification if there is data to process in the \"inbox\" note.",
 	"main": "main.js",
 	"scripts": {
