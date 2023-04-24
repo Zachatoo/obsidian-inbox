@@ -9,11 +9,11 @@
 	import store from "src/store";
 	import { CompareTypeSelect } from "src/components";
 
-	export let activateWalkthroughView: () => Promise<void>;
+	export let activateWalkthroughView: () => void;
 
 	async function startWalkthrough() {
 		store.walkthrough.reset();
-		await activateWalkthroughView();
+		activateWalkthroughView();
 	}
 </script>
 

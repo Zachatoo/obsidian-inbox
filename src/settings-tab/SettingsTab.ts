@@ -18,8 +18,10 @@ export class SettingsTab extends PluginSettingTab {
 		this.component = new SettingsTabComponent({
 			target: containerEl,
 			props: {
-				activateWalkthroughView: () =>
-					this.plugin.ensureWalkthroughViewExists(true),
+				activateWalkthroughView: () => {
+					this.plugin.ensureWalkthroughViewExists(true);
+					this.app.setting.close();
+				},
 			},
 		});
 	}
