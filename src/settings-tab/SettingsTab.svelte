@@ -1,15 +1,17 @@
 <script lang="ts">
+	import type { TAbstractFile } from "obsidian";
 	import {
 		Button,
+		FileAutocomplete,
 		NumberInput,
 		SettingItem,
 		TextArea,
-		TextInput,
 	} from "obsidian-svelte";
 	import store from "src/store";
 	import { CompareTypeSelect } from "src/components";
 
 	export let activateWalkthroughView: () => void;
+	export let markdownFiles: TAbstractFile[];
 
 	async function startWalkthrough() {
 		store.walkthrough.reset();
@@ -29,10 +31,12 @@
 <h2>Inbox Settings</h2>
 
 <SettingItem name="Inbox path" description="Path for inbox note.">
-	<TextInput
+	<FileAutocomplete
 		placeholder="Inbox"
 		value={$store.inboxNotePath}
-		on:input={({ detail }) => {
+		files={markdownFiles}
+		getLabel={(file) => file.path}
+		on:change={({ detail }) => {
 			$store.inboxNotePath = detail;
 		}}
 	/>

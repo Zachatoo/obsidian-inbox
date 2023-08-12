@@ -22,6 +22,7 @@ export class SettingsTab extends PluginSettingTab {
 					this.plugin.ensureWalkthroughViewExists(true);
 					this.app.setting.close();
 				},
+				markdownFiles: this.app.vault.getMarkdownFiles(),
 			},
 		});
 	}
