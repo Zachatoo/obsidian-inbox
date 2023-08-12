@@ -5,7 +5,7 @@ import {
 	WorkspaceLeaf,
 	type MarkdownFileInfo,
 } from "obsidian";
-import { getValueFromMarkdownFileInfo } from "./markdown-file-info-helpers";
+import { getValueFromMarkdownFileInfo } from "./obsidian/markdown-file-info-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import {
 	DEFAULT_SETTINGS,
@@ -18,7 +18,7 @@ import {
 	InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
-import { findMarkdownLeavesMatchingPath } from "./workspace-helpers";
+import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
 
 export default class InboxPlugin extends Plugin {
 	settings: InboxPluginSettings;
