@@ -1,5 +1,6 @@
 import { App, PluginSettingTab } from "obsidian";
 import type InboxPlugin from "src/main";
+import { getFolders } from "src/obsidian/vault-helpers";
 import SettingsTabComponent from "./SettingsTab.svelte";
 
 export class SettingsTab extends PluginSettingTab {
@@ -23,6 +24,7 @@ export class SettingsTab extends PluginSettingTab {
 					this.app.setting.close();
 				},
 				markdownFiles: this.app.vault.getMarkdownFiles(),
+				folders: getFolders(this.app.vault),
 			},
 		});
 	}

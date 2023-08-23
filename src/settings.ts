@@ -1,6 +1,14 @@
 import type { WalkthroughStatus } from "./walkthrough/WalkthroughStatus";
 
+export enum TrackingTypes {
+	file = "file",
+	folder = "folder",
+}
+
+type TrackingType = keyof typeof TrackingTypes;
+
 export interface InboxPluginSettings {
+	trackingType: TrackingType;
 	inboxNotePath: string;
 	compareType: "compareToBase" | "compareToLastTracked";
 	inboxNoteBaseContents: string; // used when comparing to base
@@ -10,6 +18,7 @@ export interface InboxPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: InboxPluginSettings = {
+	trackingType: "file",
 	inboxNotePath: "",
 	compareType: "compareToLastTracked",
 	inboxNoteBaseContents: "",
@@ -19,7 +28,11 @@ export const DEFAULT_SETTINGS: InboxPluginSettings = {
 };
 
 export function migrateSettings(settings: InboxPluginSettings) {
-	if (settings.inboxNotePath && !settings.inboxNotePath.endsWith(".md")) {
+	if (
+		settings.trackingType === "file" &&
+		settings.inboxNotePath &&
+		!settings.inboxNotePath.endsWith(".md")
+	) {
 		settings.inboxNotePath += ".md";
 	}
 

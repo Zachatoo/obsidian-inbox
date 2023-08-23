@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { CompareTypeSelect } from "src/components";
-	import store, { currentWalkthroughStep } from "src/store";
-	import { WALKTHROUGH_STATUS_OPTIONS } from "./WalkthroughStatus";
+	import store from "src/store";
+	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
+	import { WalkthroughStatuses } from "./WalkthroughStatus";
 
 	export let closeWalthroughView: () => void;
 
@@ -13,11 +14,23 @@
 
 <h1>Obsidian Inbox Walkthrough</h1>
 
-<h2>Step {$currentWalkthroughStep}</h2>
-
-{#if $store.walkthroughStatus === "setCompareType"}
+{#if $store.walkthroughStatus === Object.values(WalkthroughStatuses)[1]}
 	<p>Looks like you haven't setup Obsidian Inbox yet! Let's get started!</p>
+{/if}
 
+{#if $store.walkthroughStatus === WalkthroughStatuses.setCompareFileOrFolder}
+	<p>
+		Would you like to be notified when changes are made to a file, or when
+		new files are added to a folder?
+	</p>
+
+	<FileOrFolderSelect
+		value={$store.trackingType}
+		on:change={({ detail }) => {
+			$store.trackingType = detail;
+		}}
+	/>
+{:else if $store.walkthroughStatus === WalkthroughStatuses.setCompareType}
 	<p>
 		What would you like to compare your inbox note's contents to when
 		deciding whether or not to show a notification on startup?
@@ -41,7 +54,7 @@
 		note, even if there haven't been any changes to your note since your
 		last startup.
 	</p>
-{:else if $store.walkthroughStatus === "runSetInboxNoteCommand"}
+{:else if $store.walkthroughStatus === WalkthroughStatuses.setInboxPath}
 	<p>Let's setup which note will be your inbox note.</p>
 
 	<ol>
@@ -62,7 +75,7 @@
 			(<code>ctrl p</code> on Windows) and run the "Set inbox note" command.
 		</li>
 	</ol>
-{:else if $store.walkthroughStatus === "restartObsidian"}
+{:else if $store.walkthroughStatus === WalkthroughStatuses.restartObsidian}
 	<p>Alright, let's verify that this is working.</p>
 
 	{#if $store.compareType === "compareToBase"}
@@ -98,7 +111,7 @@
 	{/if}
 
 	<p>Click the "Next" button below to continue.</p>
-{:else if $store.walkthroughStatus === "completed"}
+{:else if $store.walkthroughStatus === WalkthroughStatuses.completed}
 	<p>You've completed the walkthrough!</p>
 
 	<p>
@@ -108,10 +121,10 @@
 {/if}
 
 <div class="flex">
-	{#if $store.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[1]}
-		<button on:click={store.walkthrough.back}>Back</button>
+	{#if $store.walkthroughStatus !== Object.values(WalkthroughStatuses)[1]}
+		<button on:click={store.walkthrough.previous}>Back</button>
 	{/if}
-	{#if $store.walkthroughStatus !== WALKTHROUGH_STATUS_OPTIONS[WALKTHROUGH_STATUS_OPTIONS.length - 1]}
+	{#if $store.walkthroughStatus !== Object.values(WalkthroughStatuses)[Object.values(WalkthroughStatuses).length - 1]}
 		<button class="flex ml-auto" on:click={store.walkthrough.next}>
 			Next
 		</button>

@@ -11,6 +11,7 @@ import {
 	DEFAULT_SETTINGS,
 	migrateSettings,
 	type InboxPluginSettings,
+	TrackingTypes,
 } from "./settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
 import store from "./store";
@@ -19,6 +20,7 @@ import {
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
 import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
+import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
 
 export default class InboxPlugin extends Plugin {
 	settings: InboxPluginSettings;
@@ -45,7 +47,12 @@ export default class InboxPlugin extends Plugin {
 			name: "Set inbox note",
 			checkCallback: (checking) => {
 				const { activeEditor: fileInfo } = app.workspace;
-				if (!fileInfo || !fileInfo.file || !fileInfo.editor) {
+				if (
+					this.settings.trackingType !== TrackingTypes.file ||
+					!fileInfo ||
+					!fileInfo.file ||
+					!fileInfo.editor
+				) {
 					return false;
 				}
 				if (checking) {
@@ -70,7 +77,10 @@ export default class InboxPlugin extends Plugin {
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		this.app.workspace.onLayoutReady(async () => {
-			if (this.settings.walkthroughStatus === "unstarted") {
+			if (
+				this.settings.walkthroughStatus ===
+				WalkthroughStatuses.unstarted
+			) {
 				store.walkthrough.reset();
 				this.ensureWalkthroughViewExists();
 			} else {
@@ -224,7 +234,7 @@ export default class InboxPlugin extends Plugin {
 
 		if (
 			this.getIsWalkthroughViewOpen() &&
-			this.settings.walkthroughStatus === "runSetInboxNoteCommand"
+			this.settings.walkthroughStatus === WalkthroughStatuses.setInboxPath
 		) {
 			store.walkthrough.next();
 		}
