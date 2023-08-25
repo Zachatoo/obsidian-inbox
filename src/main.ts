@@ -65,6 +65,34 @@ export default class InboxPlugin extends Plugin {
 		});
 
 		this.registerEvent(
+			this.app.workspace.on("file-menu", (file, data) => {
+				if (this.hasPerformedCheck) {
+					if (
+						this.settings.trackingType === TrackingTypes.folder &&
+						data instanceof TFolder
+					) {
+						file.addItem((item) => {
+							item.setTitle("Set as inbox folder");
+							item.onClick((e) => {
+								this.setInboxFolder(data);
+							});
+						});
+					} else if (
+						this.settings.trackingType === TrackingTypes.file &&
+						data instanceof TFile
+					) {
+						file.addItem((item) => {
+							item.setTitle("Set as inbox note");
+							item.onClick((e) => {
+								this.setInboxNote(data);
+							});
+						});
+					}
+				}
+			})
+		);
+
+		this.registerEvent(
 			this.app.metadataCache.on("changed", async (file, data, cache) => {
 				if (
 					this.hasPerformedCheck &&
@@ -290,21 +318,31 @@ export default class InboxPlugin extends Plugin {
 		new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
 	}
 
-	setInboxNote(fileInfo: MarkdownFileInfo) {
-		if (!fileInfo.file || !fileInfo.editor) {
-			new ErrorNotice("Failed to set inbox note, no editor detected.");
-			return;
-		}
+	async setInboxNote(file: MarkdownFileInfo | TFile) {
+		if (file instanceof TFile) {
+			this.settings.inboxNotePath = file.path;
+			const contents = (await this.app.vault.read(file)).trim();
+			this.settings.inboxNoteContents = contents;
+		} else {
+			if (!file.file || !file.editor) {
+				new ErrorNotice(
+					"Failed to set inbox note, no editor detected."
+				);
+				return;
+			}
 
-		this.settings.inboxNotePath = fileInfo.file.path;
+			this.settings.inboxNotePath = file.file.path;
 
-		if (this.settings.compareType === "compareToBase") {
-			this.settings.inboxNoteBaseContents =
-				getValueFromMarkdownFileInfo(fileInfo);
-		}
-		if (this.settings.compareType === "compareToLastTracked") {
-			this.settings.inboxNoteContents =
-				getValueFromMarkdownFileInfo(fileInfo).trim();
+			switch (this.settings.compareType) {
+				case "compareToBase":
+					this.settings.inboxNoteBaseContents =
+						getValueFromMarkdownFileInfo(file);
+					break;
+				case "compareToLastTracked":
+					this.settings.inboxNoteContents =
+						getValueFromMarkdownFileInfo(file).trim();
+					break;
+			}
 		}
 
 		if (
@@ -323,5 +361,16 @@ export default class InboxPlugin extends Plugin {
 			}`;
 		}
 		new InfoNotice(message);
+	}
+
+	async setInboxFolder(folder: TFolder) {
+		this.settings.inboxNotePath = folder.path;
+		const filesInFolder = getAllFilesInFolderRecursive(folder);
+		filesInFolder.sort((a, b) => a.localeCompare(b));
+		this.settings.inboxFolderFiles.sort((a, b) => a.localeCompare(b));
+		this.settings.inboxFolderFiles = filesInFolder;
+		await this.saveSettings();
+
+		new InfoNotice(`Inbox note path set to ${this.settings.inboxNotePath}`);
 	}
 }
