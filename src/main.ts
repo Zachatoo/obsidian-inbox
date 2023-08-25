@@ -88,7 +88,6 @@ export default class InboxPlugin extends Plugin {
 					this.settings.inboxFolderFiles.sort((a, b) =>
 						a.localeCompare(b)
 					);
-					console.log(this.settings.inboxFolderFiles);
 					await this.saveSettings();
 				}
 			})
@@ -110,7 +109,6 @@ export default class InboxPlugin extends Plugin {
 					this.settings.inboxFolderFiles.sort((a, b) =>
 						a.localeCompare(b)
 					);
-					console.log(this.settings.inboxFolderFiles);
 					await this.saveSettings();
 				}
 			})
@@ -130,7 +128,6 @@ export default class InboxPlugin extends Plugin {
 					this.settings.inboxFolderFiles.sort((a, b) =>
 						a.localeCompare(b)
 					);
-					console.log(this.settings.inboxFolderFiles);
 					await this.saveSettings();
 				}
 			})
