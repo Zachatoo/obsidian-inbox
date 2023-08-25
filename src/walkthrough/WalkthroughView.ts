@@ -29,7 +29,7 @@ export class InboxWalkthroughView extends ItemView {
 		this.component = new InboxWalkthroughComponent({
 			target: this.contentEl,
 			props: {
-				closeWalthroughView: () => this.closeWalkthroughView(),
+				closeWalkthroughView: () => this.closeWalkthroughView(),
 			},
 		});
 	}

@@ -4,10 +4,10 @@
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
 	import { WalkthroughStatuses } from "./WalkthroughStatus";
 
-	export let closeWalthroughView: () => void;
+	export let closeWalkthroughView: () => void;
 
 	function handleCloseWalkthrough() {
-		closeWalthroughView();
+		closeWalkthroughView();
 		store.walkthrough.complete();
 	}
 </script>

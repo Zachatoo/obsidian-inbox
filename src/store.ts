@@ -25,7 +25,7 @@ function createStore() {
 			});
 		},
 
-		reset() {
+		start() {
 			update((settings) => {
 				settings.walkthroughStatus =
 					WalkthroughStatuses.setCompareFileOrFolder;

@@ -13,6 +13,7 @@ export interface InboxPluginSettings {
 	compareType: "compareToBase" | "compareToLastTracked";
 	inboxNoteBaseContents: string; // used when comparing to base
 	inboxNoteContents: string; // used when comparing to last tracked
+	inboxFolderFiles: string[]; // list of filenames in folder
 	noticeDurationSeconds: number | null;
 	walkthroughStatus: WalkthroughStatus;
 }
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: InboxPluginSettings = {
 	compareType: "compareToLastTracked",
 	inboxNoteBaseContents: "",
 	inboxNoteContents: "",
+	inboxFolderFiles: [],
 	noticeDurationSeconds: null,
 	walkthroughStatus: "unstarted",
 };

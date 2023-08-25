@@ -16,7 +16,7 @@
 	export let folders: TFolder[];
 
 	async function startWalkthrough() {
-		store.walkthrough.reset();
+		store.walkthrough.start();
 		activateWalkthroughView();
 	}
 </script>
@@ -40,6 +40,7 @@
 		value={$store.trackingType}
 		on:change={({ detail }) => {
 			$store.trackingType = detail;
+			$store.inboxNotePath = "";
 		}}
 	/>
 </SettingItem>
