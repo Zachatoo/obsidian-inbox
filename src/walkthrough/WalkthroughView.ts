@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import InboxWalkthroughComponent from "./WalkthroughView.svelte";
 import type InboxPlugin from "src/main";
+import { getFolders } from "src/obsidian/vault-helpers";
 
 export const VIEW_TYPE_WALKTHROUGH = "inbox-walkthrough-view";
 
@@ -30,6 +31,7 @@ export class InboxWalkthroughView extends ItemView {
 			target: this.contentEl,
 			props: {
 				closeWalkthroughView: () => this.closeWalkthroughView(),
+				folders: getFolders(this.app.vault),
 			},
 		});
 	}

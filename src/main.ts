@@ -50,7 +50,7 @@ export default class InboxPlugin extends Plugin {
 			checkCallback: (checking) => {
 				const { activeEditor: fileInfo } = app.workspace;
 				if (
-					this.settings.trackingType !== TrackingTypes.file ||
+					this.settings.trackingType !== TrackingTypes.note ||
 					!fileInfo ||
 					!fileInfo.file ||
 					!fileInfo.editor
@@ -65,38 +65,10 @@ export default class InboxPlugin extends Plugin {
 		});
 
 		this.registerEvent(
-			this.app.workspace.on("file-menu", (file, data) => {
-				if (this.hasPerformedCheck) {
-					if (
-						this.settings.trackingType === TrackingTypes.folder &&
-						data instanceof TFolder
-					) {
-						file.addItem((item) => {
-							item.setTitle("Set as inbox folder");
-							item.onClick((e) => {
-								this.setInboxFolder(data);
-							});
-						});
-					} else if (
-						this.settings.trackingType === TrackingTypes.file &&
-						data instanceof TFile
-					) {
-						file.addItem((item) => {
-							item.setTitle("Set as inbox note");
-							item.onClick((e) => {
-								this.setInboxNote(data);
-							});
-						});
-					}
-				}
-			})
-		);
-
-		this.registerEvent(
 			this.app.metadataCache.on("changed", async (file, data, cache) => {
 				if (
 					this.hasPerformedCheck &&
-					this.settings.trackingType === TrackingTypes.file &&
+					this.settings.trackingType === TrackingTypes.note &&
 					file.path === this.settings.inboxNotePath
 				) {
 					this.settings.inboxNoteContents = data.trim();
@@ -227,71 +199,81 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	async notifyIfInboxNeedsProcessing() {
-		if (!this.settings.inboxNotePath) {
-			return;
-		}
-
-		const inboxAbstractFile = this.app.vault.getAbstractFileByPath(
-			this.settings.inboxNotePath
-		);
-		if (!inboxAbstractFile) {
-			new ErrorNotice(
-				`Failed to find inbox note at path ${this.settings.inboxNotePath}.`
-			);
-			return;
-		}
-
-		let shouldNotify = false;
-		if (inboxAbstractFile instanceof TFile) {
-			const contents = (
-				await this.app.vault.read(inboxAbstractFile)
-			).trim();
-			switch (this.settings.compareType) {
-				case "compareToBase":
-					shouldNotify =
-						contents !== this.settings.inboxNoteBaseContents.trim();
-					break;
-				case "compareToLastTracked":
-					shouldNotify =
-						contents !== this.settings.inboxNoteContents.trim();
-					break;
-				default:
-					break;
+		try {
+			if (!this.settings.inboxNotePath) {
+				return;
 			}
-			this.settings.inboxNoteContents = contents;
-		} else if (inboxAbstractFile instanceof TFolder) {
-			const filesInFolder =
-				getAllFilesInFolderRecursive(inboxAbstractFile);
-			filesInFolder.sort((a, b) => a.localeCompare(b));
-			this.settings.inboxFolderFiles.sort((a, b) => a.localeCompare(b));
-			shouldNotify =
-				filesInFolder.join("") !==
-				this.settings.inboxFolderFiles.join("");
-			this.settings.inboxFolderFiles = filesInFolder;
-		}
 
-		if (shouldNotify) {
-			const enableClickToView =
-				Platform.isDesktop && inboxAbstractFile instanceof TFile;
-			const baseMessage = `You have data to process in ${this.settings.inboxNotePath}`;
-			const message = enableClickToView
-				? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
-				: `${baseMessage}\nClick to dismiss.`;
-			const notice = new InfoNotice(
-				message,
-				this.settings.noticeDurationSeconds ?? undefined
+			const inboxAbstractFile = this.app.vault.getAbstractFileByPath(
+				this.settings.inboxNotePath
 			);
-
-			if (enableClickToView) {
-				notice.noticeEl.oncontextmenu = () => {
-					this.openInboxNote();
-					notice.hide();
-				};
+			if (!inboxAbstractFile) {
+				new ErrorNotice(
+					`Failed to find inbox ${this.settings.trackingType.toString()} at path ${
+						this.settings.inboxNotePath
+					}.`
+				);
+				return;
 			}
-		}
 
-		this.hasPerformedCheck = true;
-		await this.saveSettings();
+			let shouldNotify = false;
+			if (inboxAbstractFile instanceof TFile) {
+				const contents = (
+					await this.app.vault.read(inboxAbstractFile)
+				).trim();
+				switch (this.settings.compareType) {
+					case "compareToBase":
+						shouldNotify =
+							contents !==
+							this.settings.inboxNoteBaseContents.trim();
+						break;
+					case "compareToLastTracked":
+						shouldNotify =
+							contents !== this.settings.inboxNoteContents.trim();
+						break;
+					default:
+						break;
+				}
+				this.settings.inboxNoteContents = contents;
+			} else if (inboxAbstractFile instanceof TFolder) {
+				const filesInFolder =
+					getAllFilesInFolderRecursive(inboxAbstractFile);
+				filesInFolder.sort((a, b) => a.localeCompare(b));
+				this.settings.inboxFolderFiles.sort((a, b) =>
+					a.localeCompare(b)
+				);
+				shouldNotify =
+					filesInFolder.join("") !==
+					this.settings.inboxFolderFiles.join("");
+				this.settings.inboxFolderFiles = filesInFolder;
+			}
+
+			if (shouldNotify) {
+				const enableClickToView =
+					Platform.isDesktop && inboxAbstractFile instanceof TFile;
+				const baseMessage = `You have data to process in ${this.settings.inboxNotePath}`;
+				const message = enableClickToView
+					? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
+					: `${baseMessage}\nClick to dismiss.`;
+				const notice = new InfoNotice(
+					message,
+					this.settings.noticeDurationSeconds ?? undefined
+				);
+
+				if (enableClickToView) {
+					notice.noticeEl.oncontextmenu = () => {
+						this.openInboxNote();
+						notice.hide();
+					};
+				}
+			}
+
+			this.hasPerformedCheck = true;
+			await this.saveSettings();
+		} catch (error) {
+			this.hasPerformedCheck = true;
+			new ErrorNotice(`Failed to process inbox note/folder.\n${error}`);
+		}
 	}
 
 	openInboxNote() {
@@ -371,6 +353,8 @@ export default class InboxPlugin extends Plugin {
 		this.settings.inboxFolderFiles = filesInFolder;
 		await this.saveSettings();
 
-		new InfoNotice(`Inbox note path set to ${this.settings.inboxNotePath}`);
+		new InfoNotice(
+			`Inbox folder path set to ${this.settings.inboxNotePath}`
+		);
 	}
 }

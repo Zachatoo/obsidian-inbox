@@ -6,8 +6,8 @@
 
 	const options = [
 		{
-			label: "File",
-			value: "file",
+			label: "Note",
+			value: "note",
 		},
 		{
 			label: "Folder",
@@ -16,10 +16,10 @@
 	];
 
 	const dispatch = createEventDispatcher<{
-		change: "file" | "folder";
+		change: "note" | "folder";
 	}>();
 	function handleChange({ detail }: { detail: string }) {
-		if (detail === "file" || detail === "folder") {
+		if (detail === "note" || detail === "folder") {
 			dispatch("change", detail);
 		}
 	}

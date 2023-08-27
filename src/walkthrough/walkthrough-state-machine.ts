@@ -28,7 +28,7 @@ const machine: Machine = {
 		},
 		[WalkthroughStatuses.setCompareFileOrFolder]: {
 			[WalkthroughActions.next]: {
-				[TrackingTypes.file]: WalkthroughStatuses.setCompareType,
+				[TrackingTypes.note]: WalkthroughStatuses.setCompareType,
 				[TrackingTypes.folder]: WalkthroughStatuses.setInboxPath,
 			},
 		},
@@ -39,7 +39,7 @@ const machine: Machine = {
 		},
 		[WalkthroughStatuses.setInboxPath]: {
 			[WalkthroughActions.previous]: {
-				[TrackingTypes.file]: WalkthroughStatuses.setCompareType,
+				[TrackingTypes.note]: WalkthroughStatuses.setCompareType,
 				[TrackingTypes.folder]:
 					WalkthroughStatuses.setCompareFileOrFolder,
 			},

@@ -33,8 +33,8 @@
 <h2>Tracking</h2>
 
 <SettingItem
-	name="Track file or folder"
-	description="If tracking file, will notify when a file's content is updated. If tracking folder, will notify when new files are added to a folder."
+	name="Track note or folder"
+	description="If tracking note, will notify when a note's content is updated. If tracking folder, will notify when new files are added to a folder."
 >
 	<FileOrFolderSelect
 		value={$store.trackingType}
@@ -45,7 +45,7 @@
 	/>
 </SettingItem>
 
-<div class={$store.trackingType !== "file" ? "hidden" : ""}>
+<div class={$store.trackingType !== "note" ? "hidden" : ""}>
 	<SettingItem name="Inbox path" description="Path for inbox note.">
 		<FileAutocomplete
 			placeholder="Inbox.md"
