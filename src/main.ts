@@ -26,7 +26,7 @@ import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
 import { getAllFilesInFolderRecursive } from "./obsidian/tabstractfile-helpers";
 
 export default class InboxPlugin extends Plugin {
-	hasPerformedCheck: boolean;
+	private hasPerformedCheck: boolean;
 
 	async onload() {
 		this.hasPerformedCheck = false;
