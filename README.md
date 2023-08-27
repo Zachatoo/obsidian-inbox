@@ -2,9 +2,9 @@
 
 # Obsidian Inbox
 
-When using a third party tool to quickly write content to your Obsidian vault without opening your vault, often it's easiest to write it to an "inbox" note to process later.
+When using a third party tool to quickly write content to your Obsidian vault without opening your vault, often it's easiest to write it to an "inbox" note or folder to process later.
 
-This plugin will let you know if there's content to process in your inbox note when launching Obsidian.
+This plugin will let you know if there's content to process in your inbox note/folder when launching Obsidian.
 
 ## Installation
 
@@ -20,9 +20,13 @@ Sets the [inbox path](#inbox-path) and [inbox base contents](#inbox-base-content
 
 ## Settings
 
+### Track note or folder
+
+Whether to track inbox by referencing the contents of a single file or a folder of files.
+
 ### Inbox path
 
-Path for inbox note.
+Path for inbox note/folder.
 
 For example, if your inbox note is in the root of your vault and called "Mobile Inbox", then the path would be "Mobile Inbox.md".
 
@@ -44,7 +48,7 @@ then you should set your inbox base contents to match. That way, you will only b
 
 ### Inbox notice duration
 
-Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration.
+Duration to show Notice when there is data to process, in seconds. Set to `0` for infinite duration. Clear to use global default Notice duration.
 
 ## Attributions
 
