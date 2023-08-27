@@ -4,10 +4,12 @@
 	import store from "src/store";
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
 	import { WalkthroughStatuses } from "./WalkthroughStatus";
-	import { TrackingTypes } from "src/settings";
+	import { TrackingTypes, type TrackingType } from "src/settings";
 	import { FileAutocomplete } from "obsidian-svelte";
 
 	export let closeWalkthroughView: () => void;
+	export let setTrackingType: (trackingType: TrackingType) => Promise<void>;
+	export let setInboxFolder: (folderPath: string) => Promise<void>;
 	export let folders: TFolder[];
 
 	function handleCloseWalkthrough() {
@@ -30,8 +32,10 @@
 
 	<FileOrFolderSelect
 		value={$store.trackingType}
-		on:change={({ detail }) => {
-			$store.trackingType = detail;
+		on:change={async ({ detail }) => {
+			if (detail !== $store.trackingType) {
+				await setTrackingType(detail);
+			}
 		}}
 	/>
 {:else if $store.walkthroughStatus === WalkthroughStatuses.setCompareType}
@@ -92,8 +96,10 @@
 			value={$store.inboxNotePath}
 			files={folders}
 			getLabel={(file) => file.path}
-			on:change={({ detail }) => {
-				$store.inboxNotePath = detail;
+			on:change={async ({ detail }) => {
+				if (detail !== $store.inboxNotePath) {
+					await setInboxFolder(detail);
+				}
 			}}
 		/>
 	{/if}

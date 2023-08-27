@@ -5,7 +5,7 @@ export enum TrackingTypes {
 	folder = "folder",
 }
 
-type TrackingType = keyof typeof TrackingTypes;
+export type TrackingType = keyof typeof TrackingTypes;
 
 export interface InboxPluginSettings {
 	/**

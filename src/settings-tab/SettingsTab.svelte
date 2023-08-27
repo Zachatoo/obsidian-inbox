@@ -10,8 +10,12 @@
 	import store from "src/store";
 	import { CompareTypeSelect } from "src/components";
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
+	import type { TrackingType } from "src/settings";
 
 	export let activateWalkthroughView: () => void;
+	export let setTrackingType: (trackingType: TrackingType) => Promise<void>;
+	export let setInboxNote: (notePath: string) => Promise<void>;
+	export let setInboxFolder: (folderPath: string) => Promise<void>;
 	export let markdownFiles: TAbstractFile[];
 	export let folders: TFolder[];
 
@@ -38,9 +42,10 @@
 >
 	<FileOrFolderSelect
 		value={$store.trackingType}
-		on:change={({ detail }) => {
-			$store.trackingType = detail;
-			$store.inboxNotePath = "";
+		on:change={async ({ detail }) => {
+			if (detail !== $store.trackingType) {
+				await setTrackingType(detail);
+			}
 		}}
 	/>
 </SettingItem>
@@ -52,8 +57,10 @@
 			value={$store.inboxNotePath}
 			files={markdownFiles}
 			getLabel={(file) => file.path}
-			on:change={({ detail }) => {
-				$store.inboxNotePath = detail;
+			on:change={async ({ detail }) => {
+				if (detail !== $store.inboxNotePath) {
+					await setInboxNote(detail);
+				}
 			}}
 		/>
 	</SettingItem>
@@ -94,8 +101,10 @@
 			value={$store.inboxNotePath}
 			files={folders}
 			getLabel={(file) => file.path}
-			on:change={({ detail }) => {
-				$store.inboxNotePath = detail;
+			on:change={async ({ detail }) => {
+				if (detail !== $store.inboxNotePath) {
+					await setInboxFolder(detail);
+				}
 			}}
 		/>
 	</SettingItem>

@@ -31,6 +31,10 @@ export class InboxWalkthroughView extends ItemView {
 			target: this.contentEl,
 			props: {
 				closeWalkthroughView: () => this.closeWalkthroughView(),
+				setTrackingType: (trackingType) =>
+					this.plugin.setTrackingType(trackingType),
+				setInboxFolder: (folderPath) =>
+					this.plugin.setInboxFolder(folderPath),
 				folders: getFolders(this.app.vault),
 			},
 		});
