@@ -26,8 +26,9 @@ export class SettingsTab extends PluginSettingTab {
 				},
 				setTrackingType: (trackingType: TrackingType) =>
 					this.plugin.setTrackingType(trackingType),
-				setInboxNote: (notePath) => this.plugin.setInboxNote(notePath),
-				setInboxFolder: (folderPath) =>
+				setInboxNote: (notePath: string) =>
+					this.plugin.setInboxNote(notePath),
+				setInboxFolder: (folderPath: string) =>
 					this.plugin.setInboxFolder(folderPath),
 				markdownFiles: this.app.vault.getMarkdownFiles(),
 				folders: getFolders(this.app.vault),
