@@ -1,11 +1,11 @@
 import { writable } from "svelte/store";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
-import type { InboxPluginSettings } from "./settings";
+import type { InboxPluginSettingsV2 } from "./settings/InboxPluginSettingsV2";
 import { transition } from "./walkthrough/walkthrough-state-machine";
 import { WalkthroughActions } from "./walkthrough/WalkthroughAction";
 
 function createStore() {
-	const { subscribe, set, update } = writable<InboxPluginSettings>();
+	const { subscribe, set, update } = writable<InboxPluginSettingsV2>();
 
 	const walkthrough = {
 		next() {

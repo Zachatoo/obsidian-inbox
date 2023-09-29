@@ -1,4 +1,7 @@
-import { TrackingTypes, type InboxPluginSettings } from "src/settings";
+import {
+	TrackingTypes,
+	type InboxPluginSettingsV2,
+} from "src/settings/InboxPluginSettingsV2";
 import {
 	WalkthroughStatuses,
 	type WalkthroughStatus,
@@ -56,7 +59,7 @@ const machine: Machine = {
 };
 
 export function transition(
-	state: InboxPluginSettings,
+	state: InboxPluginSettingsV2,
 	action: WalkthroughAction
 ) {
 	const to = machine.states[state.walkthroughStatus][action];

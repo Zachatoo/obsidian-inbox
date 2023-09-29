@@ -1,13 +1,10 @@
-import type { WalkthroughStatus } from "./walkthrough/WalkthroughStatus";
+import type { TrackingType } from "./TrackingTypes";
+import type { WalkthroughStatus } from "../walkthrough/WalkthroughStatus";
 
-export enum TrackingTypes {
-	note = "note",
-	folder = "folder",
-}
-
-export type TrackingType = keyof typeof TrackingTypes;
-
-export interface InboxPluginSettings {
+/**
+ * @deprecated Use latest version of InboxPluginSettings. Only keeping around for migration purposes.
+ */
+export interface InboxPluginSettingsV1 {
 	/**
 	 * Whether to track inbox by referencing the contents of
 	 * a single file or a folder of files.
@@ -30,14 +27,14 @@ export interface InboxPluginSettings {
 	/**
 	 * User defined default state of inbox note if there is nothing to process.
 	 * Used when `compareType` is set to "compareToBase".
-	 * @see InboxPluginSettings.compareType
+	 * @see InboxPluginSettingsV1.compareType
 	 */
 	inboxNoteBaseContents: string;
 	/**
 	 * Last tracked contents of inbox note.
 	 * If the contents of the inbox note match this on startup, then there is nothing to process.
 	 * Used when `compareType` is set to "compareToLastTracked".
-	 * @see InboxPluginSettings.compareType
+	 * @see InboxPluginSettingsV1.compareType
 	 */
 	inboxNoteContents: string;
 	/**
@@ -58,31 +55,8 @@ export interface InboxPluginSettings {
 	walkthroughStatus: WalkthroughStatus;
 }
 
-export const DEFAULT_SETTINGS: InboxPluginSettings = {
-	trackingType: "note",
-	inboxNotePath: "",
-	compareType: "compareToLastTracked",
-	inboxNoteBaseContents: "",
-	inboxNoteContents: "",
-	inboxFolderFiles: [],
-	noticeDurationSeconds: null,
-	walkthroughStatus: "unstarted",
-};
-
-/**
- * Handles any backwards incompatible changes to the settings schema.
- * @param settings The plugin settings.
- * @returns The plugin settings with any migrations applied.
- */
-export function migrateSettings(settings: InboxPluginSettings) {
-	// If tracking by file, the file path must end with .md
-	if (
-		settings.trackingType === "note" &&
-		settings.inboxNotePath &&
-		!settings.inboxNotePath.endsWith(".md")
-	) {
-		settings.inboxNotePath += ".md";
-	}
-
-	return settings;
+export function isInboxPluginSettingsV1(
+	obj: unknown
+): obj is InboxPluginSettingsV1 {
+	return !!(obj && typeof obj === "object" && "inboxNotePath" in obj);
 }
