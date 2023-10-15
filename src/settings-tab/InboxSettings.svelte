@@ -3,8 +3,8 @@
 	import {
 		Button,
 		FileAutocomplete,
+		Icon,
 		NumberInput,
-		SettingItem,
 		TextArea,
 	} from "obsidian-svelte";
 	import { getAllFilesInFolderRecursive } from "src/obsidian/tabstractfile-helpers";
@@ -81,97 +81,94 @@
 		matchingInbox.inboxFolderFiles = filesInFolder;
 		store.set(settings);
 	}
+
+	function moveInboxUp() {
+		store.moveInboxUp(index);
+	}
+
+	function moveInboxDown() {
+		store.moveInboxDown(index);
+	}
+
+	function removeInbox() {
+		store.removeInbox(index);
+	}
 </script>
 
-<SettingItem
-	name="Track note or folder"
-	description="If tracking note, will notify when a note's content is updated. If tracking folder, will notify when new files are added to a folder."
->
-	<FileOrFolderSelect
-		value={inbox.trackingType}
-		on:change={async ({ detail }) => {
-			if (detail !== inbox.trackingType) {
-				setTrackingType(detail);
-			}
-		}}
-	/>
-</SettingItem>
-
-<div class={inbox.trackingType !== "note" ? "hidden" : ""}>
-	<SettingItem name="Inbox path" description="Path for inbox note.">
-		<FileAutocomplete
-			placeholder="Inbox.md"
-			value={inbox.path}
-			files={markdownFiles}
-			getLabel={(file) => file.path}
+<div class="setting-item">
+	<div class="setting-item-control inbox-setting-item-control">
+		<FileOrFolderSelect
+			value={inbox.trackingType}
 			on:change={async ({ detail }) => {
-				if (detail !== inbox.path) {
-					await setInboxNote(detail);
+				if (detail !== inbox.trackingType) {
+					setTrackingType(detail);
 				}
 			}}
 		/>
-	</SettingItem>
 
-	<SettingItem
-		name="Compare type"
-		description="What to compare the inbox note contents to when deciding whether or not to notify. 'Compare to last tracked' will compare to a snapshot from when Obsidian was last closed. 'Compare to base' will compare to a base contents that you define."
-	>
-		<CompareTypeSelect
-			value={inbox.compareType}
-			on:change={({ detail }) => {
-				inbox.compareType = detail;
-			}}
-		/>
-	</SettingItem>
-
-	<div class={inbox.compareType !== "compareToBase" ? "hidden" : ""}>
-		<SettingItem
-			name="Inbox base contents"
-			description="If note content matches this exactly, then you will not be notified."
-		>
-			<TextArea
-				placeholder="# Inbox"
-				value={inbox.inboxNoteBaseContents}
-				on:input={({ detail }) => {
-					inbox.inboxNoteBaseContents = detail;
+		{#if inbox.trackingType === "note"}
+			<FileAutocomplete
+				placeholder="Inbox.md"
+				value={inbox.path}
+				files={markdownFiles}
+				getLabel={(file) => file.path}
+				on:change={async ({ detail }) => {
+					if (detail !== inbox.path) {
+						await setInboxNote(detail);
+					}
 				}}
-				rows={3}
 			/>
-		</SettingItem>
+
+			<CompareTypeSelect
+				value={inbox.compareType}
+				on:change={({ detail }) => {
+					$store.inboxes[index].compareType = detail;
+				}}
+			/>
+
+			{#if inbox.compareType === "compareToBase"}
+				<TextArea
+					placeholder="# Inbox"
+					value={inbox.inboxNoteBaseContents}
+					on:input={({ detail }) => {
+						$store.inboxes[index].inboxNoteBaseContents = detail;
+					}}
+					rows={1}
+				/>
+			{/if}
+		{/if}
+
+		{#if inbox.trackingType === "folder"}
+			<FileAutocomplete
+				placeholder="Inbox"
+				value={inbox.path}
+				files={folders}
+				getLabel={(file) => file.path}
+				on:change={async ({ detail }) => {
+					if (detail !== inbox.path) {
+						await setInboxFolder(detail);
+					}
+				}}
+			/>
+		{/if}
+
+		<input
+			type="number"
+			placeholder="0"
+			aria-label="Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration."
+			style="width: 40px;"
+			bind:value={$store.inboxes[index].noticeDurationSeconds}
+		/>
+
+		<Button on:click={moveInboxUp}><Icon name="chevron-up" /></Button>
+		<Button on:click={moveInboxDown}><Icon name="chevron-down" /></Button>
+		<Button on:click={removeInbox}><Icon name="cross" /></Button>
 	</div>
 </div>
 
-<div class={inbox.trackingType !== "folder" ? "hidden" : ""}>
-	<SettingItem name="Inbox path" description="Path for inbox folder.">
-		<FileAutocomplete
-			placeholder="Inbox"
-			value={inbox.path}
-			files={folders}
-			getLabel={(file) => file.path}
-			on:change={async ({ detail }) => {
-				if (detail !== inbox.path) {
-					await setInboxFolder(detail);
-				}
-			}}
-		/>
-	</SettingItem>
-</div>
-
-<SettingItem
-	name="Inbox notice duration"
-	description="Duration to show Notice when there is data to process, in seconds. Set to 0 for infinite duration. Clear to use global default Notice duration."
->
-	<NumberInput
-		placeholder="0"
-		value={inbox.noticeDurationSeconds}
-		on:input={({ detail }) => {
-			inbox.noticeDurationSeconds = detail;
-		}}
-	/>
-</SettingItem>
-
 <style>
-	.hidden {
-		display: none;
+	.inbox-setting-item-control {
+		justify-content: start;
+		flex-wrap: wrap;
 	}
 </style>

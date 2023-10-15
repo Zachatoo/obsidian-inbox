@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { TAbstractFile, TFile, TFolder } from "obsidian";
-	import { Button, SettingItem } from "obsidian-svelte";
+	import { Button, Icon, SettingItem } from "obsidian-svelte";
 	import store from "src/store";
 	import InboxSettings from "./InboxSettings.svelte";
 
@@ -13,6 +13,10 @@
 		store.walkthrough.start();
 		activateWalkthroughView();
 	}
+
+	function addInbox() {
+		store.addInbox();
+	}
 </script>
 
 <h2>Walkthrough</h2>
@@ -24,8 +28,20 @@
 	<Button variant="primary" on:click={startWalkthrough}>Start</Button>
 </SettingItem>
 
-<h2>Inboxes</h2>
+<div class="inbox-setting-heading-with-button">
+	<h2>Inboxes</h2>
+
+	<Button on:click={addInbox}><Icon name="plus" /></Button>
+</div>
 
 {#each $store.inboxes as inbox, index}
 	<InboxSettings {inbox} {index} {readFile} {markdownFiles} {folders} />
 {/each}
+
+<style>
+	.inbox-setting-heading-with-button {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+</style>

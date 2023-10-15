@@ -25,4 +25,9 @@
 	}
 </script>
 
-<Select {options} {value} on:change={handleChange} />
+<Select
+	{options}
+	{value}
+	tooltip="If tracking note, will notify when a note's content is updated. If tracking folder, will notify when new files are added to a folder."
+	on:change={handleChange}
+/>

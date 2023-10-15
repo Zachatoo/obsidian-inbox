@@ -34,10 +34,62 @@ function createStore() {
 		},
 	};
 
+	function addInbox() {
+		update((settings) => {
+			settings.inboxes.push({
+				trackingType: "note",
+				path: "",
+				compareType: "compareToBase",
+				inboxNoteBaseContents: "",
+				inboxNoteContents: "",
+				inboxFolderFiles: [],
+				noticeDurationSeconds: null,
+			});
+			return settings;
+		});
+	}
+
+	function moveInboxUp(index: number) {
+		update((settings) => {
+			if (index - 1 >= 0) {
+				const replaced = settings.inboxes.at(index - 1);
+				if (replaced) {
+					settings.inboxes[index - 1] = settings.inboxes[index];
+					settings.inboxes[index] = replaced;
+				}
+			}
+			return settings;
+		});
+	}
+
+	function moveInboxDown(index: number) {
+		update((settings) => {
+			if (index <= settings.inboxes.length) {
+				const replaced = settings.inboxes.at(index + 1);
+				if (replaced) {
+					settings.inboxes[index + 1] = settings.inboxes[index];
+					settings.inboxes[index] = replaced;
+				}
+			}
+			return settings;
+		});
+	}
+
+	function removeInbox(index: number) {
+		update((settings) => {
+			settings.inboxes.splice(index, 1);
+			return settings;
+		});
+	}
+
 	return {
 		subscribe,
 		set,
 		walkthrough,
+		addInbox,
+		moveInboxUp,
+		moveInboxDown,
+		removeInbox,
 	};
 }
 
