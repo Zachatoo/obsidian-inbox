@@ -2,7 +2,6 @@ import { App, PluginSettingTab } from "obsidian";
 import type InboxPlugin from "src/main";
 import { getFolders } from "src/obsidian/vault-helpers";
 import SettingsTabComponent from "./SettingsTab.svelte";
-import type { TrackingType } from "src/settings";
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: InboxPlugin;
@@ -24,12 +23,7 @@ export class SettingsTab extends PluginSettingTab {
 					this.plugin.ensureWalkthroughViewExists(true);
 					this.app.setting.close();
 				},
-				setTrackingType: (trackingType: TrackingType) =>
-					this.plugin.setTrackingType(trackingType),
-				setInboxNote: (notePath: string) =>
-					this.plugin.setInboxNote(notePath),
-				setInboxFolder: (folderPath: string) =>
-					this.plugin.setInboxFolder(folderPath),
+				app: this.app,
 				markdownFiles: this.app.vault.getMarkdownFiles(),
 				folders: getFolders(this.app.vault),
 			},

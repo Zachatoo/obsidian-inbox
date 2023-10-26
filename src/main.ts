@@ -1,32 +1,24 @@
-import {
-	Platform,
-	Plugin,
-	TFile,
-	WorkspaceLeaf,
-	type MarkdownFileInfo,
-	TFolder,
-} from "obsidian";
+import { Platform, Plugin, TFile, WorkspaceLeaf, TFolder } from "obsidian";
 import { get } from "svelte/store";
-import { getValueFromMarkdownFileInfo } from "./obsidian/markdown-file-info-helpers";
+import store from "./store";
+import { getAllFilesInFolderRecursive } from "./obsidian/tabstractfile-helpers";
+import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import {
 	DEFAULT_SETTINGS,
-	migrateSettings,
-	TrackingTypes,
-	type TrackingType,
-} from "./settings";
+	isInboxPluginSettingsV2,
+} from "./settings/InboxPluginSettingsV2";
+import { migrateSettings } from "./settings/migrate-settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
-import store from "./store";
 import {
 	InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
-import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
-import { getAllFilesInFolderRecursive } from "./obsidian/tabstractfile-helpers";
+import { registerEvents } from "./register-events";
 
 export default class InboxPlugin extends Plugin {
-	private hasPerformedCheck: boolean;
+	hasPerformedCheck: boolean;
 
 	async onload() {
 		this.hasPerformedCheck = false;
@@ -43,99 +35,7 @@ export default class InboxPlugin extends Plugin {
 			(leaf) => new InboxWalkthroughView(leaf, this)
 		);
 
-		this.addCommand({
-			id: "set-inbox-note",
-			name: "Set inbox note",
-			checkCallback: (checking) => {
-				const settings = get(store);
-				const { activeEditor: fileInfo } = app.workspace;
-				if (
-					settings.trackingType !== TrackingTypes.note ||
-					!fileInfo ||
-					!fileInfo.file ||
-					!fileInfo.editor
-				) {
-					return false;
-				}
-				if (checking) {
-					return true;
-				}
-				this.setInboxNote(fileInfo);
-			},
-		});
-
-		this.registerEvent(
-			this.app.metadataCache.on("changed", async (file, data, cache) => {
-				const settings = get(store);
-				if (
-					this.hasPerformedCheck &&
-					settings.trackingType === TrackingTypes.note &&
-					file.path === settings.inboxNotePath
-				) {
-					settings.inboxNoteContents = data.trim();
-					store.set(settings);
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("create", async (file) => {
-				const settings = get(store);
-				if (
-					this.hasPerformedCheck &&
-					settings.trackingType === TrackingTypes.folder &&
-					file.path.startsWith(settings.inboxNotePath)
-				) {
-					settings.inboxFolderFiles.push(file.name);
-					settings.inboxFolderFiles.sort((a, b) =>
-						a.localeCompare(b)
-					);
-					store.set(settings);
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("rename", async (file, oldPath) => {
-				const settings = get(store);
-				if (
-					this.hasPerformedCheck &&
-					settings.trackingType === TrackingTypes.folder
-				) {
-					const oldName = oldPath.split("/").at(-1);
-					settings.inboxFolderFiles = [
-						...settings.inboxFolderFiles.filter(
-							(x) => x !== oldName
-						),
-						file.name,
-					];
-					settings.inboxFolderFiles.sort((a, b) =>
-						a.localeCompare(b)
-					);
-					store.set(settings);
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("delete", async (file) => {
-				const settings = get(store);
-				if (
-					this.hasPerformedCheck &&
-					settings.trackingType === TrackingTypes.folder &&
-					file.path.startsWith(settings.inboxNotePath)
-				) {
-					settings.inboxFolderFiles =
-						settings.inboxFolderFiles.filter(
-							(x) => x !== file.name
-						);
-					settings.inboxFolderFiles.sort((a, b) =>
-						a.localeCompare(b)
-					);
-					store.set(settings);
-				}
-			})
-		);
+		registerEvents(this);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -156,7 +56,7 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		let settings = Object.assign(
+		let settings: unknown = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
 			await this.loadData()
@@ -164,7 +64,13 @@ export default class InboxPlugin extends Plugin {
 
 		settings = migrateSettings(settings);
 
-		store.set(settings);
+		if (isInboxPluginSettingsV2(settings)) {
+			store.set(settings);
+		} else {
+			new ErrorNotice(
+				`Failed to load settings.\nSettings could not be migrated to match schema.\n${settings}`
+			);
+		}
 	}
 
 	ensureWalkthroughViewExists(active = false) {
@@ -199,184 +105,108 @@ export default class InboxPlugin extends Plugin {
 	async notifyIfInboxNeedsProcessing() {
 		const settings = get(store);
 		try {
-			if (!settings.inboxNotePath) {
-				return;
-			}
+			if (settings.inboxes.length > 0) {
+				const updatedInboxes = await Promise.all(
+					settings.inboxes.map(async (inbox, index) => {
+						if (!inbox.path) {
+							return inbox;
+						}
 
-			const inboxAbstractFile = this.app.vault.getAbstractFileByPath(
-				settings.inboxNotePath
-			);
-			if (!inboxAbstractFile) {
-				new ErrorNotice(
-					`Failed to find inbox ${settings.trackingType.toString()} at path ${
-						settings.inboxNotePath
-					}.`
+						const inboxAbstractFile =
+							this.app.vault.getAbstractFileByPath(inbox.path);
+						if (!inboxAbstractFile) {
+							new ErrorNotice(
+								`Failed to find inbox ${inbox.trackingType.toString()} at path ${
+									inbox.path
+								}.`
+							);
+							return inbox;
+						}
+
+						let shouldNotify = false;
+						if (inboxAbstractFile instanceof TFile) {
+							const contents = (
+								await this.app.vault.read(inboxAbstractFile)
+							).trim();
+							switch (inbox.compareType) {
+								case "compareToBase":
+									shouldNotify =
+										contents !==
+										inbox.inboxNoteBaseContents.trim();
+									break;
+								case "compareToLastTracked":
+									shouldNotify =
+										contents !==
+										inbox.inboxNoteContents.trim();
+									break;
+								default:
+									break;
+							}
+							inbox.inboxNoteContents = contents;
+						} else if (inboxAbstractFile instanceof TFolder) {
+							const filesInFolder =
+								getAllFilesInFolderRecursive(inboxAbstractFile);
+							filesInFolder.sort((a, b) => a.localeCompare(b));
+							inbox.inboxFolderFiles.sort((a, b) =>
+								a.localeCompare(b)
+							);
+							shouldNotify =
+								filesInFolder.join("") !==
+								inbox.inboxFolderFiles.join("");
+							inbox.inboxFolderFiles = filesInFolder;
+						}
+
+						if (shouldNotify) {
+							const enableClickToView =
+								Platform.isDesktop &&
+								inboxAbstractFile instanceof TFile;
+							const baseMessage = `You have data to process in ${inbox.path}`;
+							const message = enableClickToView
+								? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
+								: `${baseMessage}\nClick to dismiss.`;
+							const notice = new InfoNotice(
+								message,
+								inbox.noticeDurationSeconds ?? undefined
+							);
+
+							if (enableClickToView) {
+								notice.noticeEl.oncontextmenu = () => {
+									this.ensureLeafAtPathIsActive(inbox.path);
+									notice.hide();
+								};
+							}
+						}
+						return inbox;
+					})
 				);
-				return;
+				settings.inboxes = updatedInboxes;
+				store.set(settings);
 			}
-
-			let shouldNotify = false;
-			if (inboxAbstractFile instanceof TFile) {
-				const contents = (
-					await this.app.vault.read(inboxAbstractFile)
-				).trim();
-				switch (settings.compareType) {
-					case "compareToBase":
-						shouldNotify =
-							contents !== settings.inboxNoteBaseContents.trim();
-						break;
-					case "compareToLastTracked":
-						shouldNotify =
-							contents !== settings.inboxNoteContents.trim();
-						break;
-					default:
-						break;
-				}
-				settings.inboxNoteContents = contents;
-			} else if (inboxAbstractFile instanceof TFolder) {
-				const filesInFolder =
-					getAllFilesInFolderRecursive(inboxAbstractFile);
-				filesInFolder.sort((a, b) => a.localeCompare(b));
-				settings.inboxFolderFiles.sort((a, b) => a.localeCompare(b));
-				shouldNotify =
-					filesInFolder.join("") !==
-					settings.inboxFolderFiles.join("");
-				settings.inboxFolderFiles = filesInFolder;
-			}
-
-			if (shouldNotify) {
-				const enableClickToView =
-					Platform.isDesktop && inboxAbstractFile instanceof TFile;
-				const baseMessage = `You have data to process in ${settings.inboxNotePath}`;
-				const message = enableClickToView
-					? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
-					: `${baseMessage}\nClick to dismiss.`;
-				const notice = new InfoNotice(
-					message,
-					settings.noticeDurationSeconds ?? undefined
-				);
-
-				if (enableClickToView) {
-					notice.noticeEl.oncontextmenu = () => {
-						this.openInboxNote();
-						notice.hide();
-					};
-				}
-			}
-
-			this.hasPerformedCheck = true;
-			store.set(settings);
 		} catch (error) {
-			this.hasPerformedCheck = true;
-			new ErrorNotice(`Failed to process inbox note/folder.\n${error}`);
+			new ErrorNotice(`Failed to process inboxes.\n${error}`);
 		}
+		this.hasPerformedCheck = true;
 	}
 
-	openInboxNote() {
-		const settings = get(store);
-		const inboxNoteLeaves = findMarkdownLeavesMatchingPath(
+	ensureLeafAtPathIsActive(path: string) {
+		const leavesMatchingPath = findMarkdownLeavesMatchingPath(
 			this.app.workspace,
-			settings.inboxNotePath
+			path
 		);
-		if (inboxNoteLeaves.some(Boolean)) {
-			this.app.workspace.setActiveLeaf(inboxNoteLeaves[0], {
+		if (leavesMatchingPath.some(Boolean)) {
+			this.app.workspace.setActiveLeaf(leavesMatchingPath[0], {
 				focus: true,
 			});
 			return;
 		}
 
-		const inboxNote = this.app.vault.getAbstractFileByPath(
-			settings.inboxNotePath
-		);
-		if (inboxNote instanceof TFile) {
+		const file = this.app.vault.getAbstractFileByPath(path);
+		if (file instanceof TFile) {
 			const leaf = this.app.workspace.getLeaf(true);
-			leaf.openFile(inboxNote);
+			leaf.openFile(file);
 			return;
 		}
 
-		new ErrorNotice(`Failed to find inbox note at path ${inboxNote}.`);
-	}
-
-	async setTrackingType(trackingType: TrackingType) {
-		const settings = get(store);
-		settings.trackingType = trackingType;
-		settings.inboxNotePath = "";
-		store.set(settings);
-	}
-
-	async setInboxNote(file: MarkdownFileInfo | TFile | string) {
-		const settings = get(store);
-		if (typeof file === "string") {
-			const matchingFile = this.app.vault.getAbstractFileByPath(file);
-			if (!matchingFile || !(matchingFile instanceof TFile)) {
-				new ErrorNotice(
-					`Failed to set inbox note, ${file} could not be found or is not a note.`
-				);
-				return;
-			}
-			settings.inboxNotePath = file;
-			const contents = (await this.app.vault.read(matchingFile)).trim();
-			settings.inboxNoteContents = contents;
-		} else if (file instanceof TFile) {
-			settings.inboxNotePath = file.path;
-			const contents = (await this.app.vault.read(file)).trim();
-			settings.inboxNoteContents = contents;
-		} else {
-			if (!file.file || !file.editor) {
-				new ErrorNotice(
-					"Failed to set inbox note, no editor detected."
-				);
-				return;
-			}
-
-			settings.inboxNotePath = file.file.path;
-
-			switch (settings.compareType) {
-				case "compareToBase":
-					settings.inboxNoteBaseContents =
-						getValueFromMarkdownFileInfo(file);
-					break;
-				case "compareToLastTracked":
-					settings.inboxNoteContents =
-						getValueFromMarkdownFileInfo(file).trim();
-					break;
-			}
-		}
-
-		if (
-			this.getIsWalkthroughViewOpen() &&
-			settings.walkthroughStatus === WalkthroughStatuses.setInboxPath
-		) {
-			store.walkthrough.next();
-		}
-
-		store.set(settings);
-
-		let message = `Inbox note path set to ${settings.inboxNotePath}`;
-		if (settings.compareType === "compareToBase") {
-			message += `\nInbox note base contents set to\n${
-				settings.inboxNoteBaseContents || "<blank>"
-			}`;
-		}
-		new InfoNotice(message);
-	}
-
-	async setInboxFolder(folderPath: string) {
-		const folder = this.app.vault.getAbstractFileByPath(folderPath);
-		if (!folder || !(folder instanceof TFolder)) {
-			new ErrorNotice(
-				`Failed to set inbox folder, ${folderPath} could not be found or is not a folder.`
-			);
-			return;
-		}
-		const settings = get(store);
-		settings.inboxNotePath = folder.path;
-		const filesInFolder = getAllFilesInFolderRecursive(folder);
-		filesInFolder.sort((a, b) => a.localeCompare(b));
-		settings.inboxFolderFiles.sort((a, b) => a.localeCompare(b));
-		settings.inboxFolderFiles = filesInFolder;
-		store.set(settings);
-
-		new InfoNotice(`Inbox folder path set to ${settings.inboxNotePath}`);
+		new ErrorNotice(`Failed to find note at path ${path}.`);
 	}
 }

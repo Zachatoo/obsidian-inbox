@@ -1,15 +1,20 @@
 <script lang="ts">
-	import type { TFolder } from "obsidian";
+	import type { App, TFile, TFolder } from "obsidian";
 	import { CompareTypeSelect } from "src/components";
-	import store from "src/store";
+	import store, { lastInbox, lastInboxIndex } from "src/store";
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
 	import { WalkthroughStatuses } from "./WalkthroughStatus";
-	import { TrackingTypes, type TrackingType } from "src/settings";
+	import { TrackingTypes } from "src/settings/TrackingTypes";
 	import { FileAutocomplete } from "obsidian-svelte";
+	import {
+		setInboxFolder,
+		setInboxNote,
+		setTrackingType,
+	} from "src/inbox-helpers";
 
+	export let app: App;
 	export let closeWalkthroughView: () => void;
-	export let setTrackingType: (trackingType: TrackingType) => Promise<void>;
-	export let setInboxFolder: (folderPath: string) => Promise<void>;
+	export let markdownFiles: TFile[];
 	export let folders: TFolder[];
 
 	function handleCloseWalkthrough() {
@@ -31,10 +36,10 @@
 	</p>
 
 	<FileOrFolderSelect
-		value={$store.trackingType}
+		value={$lastInbox.trackingType}
 		on:change={async ({ detail }) => {
-			if (detail !== $store.trackingType) {
-				await setTrackingType(detail);
+			if (detail !== $lastInbox.trackingType) {
+				setTrackingType(detail, $lastInboxIndex);
 			}
 		}}
 	/>
@@ -45,9 +50,9 @@
 	</p>
 
 	<CompareTypeSelect
-		value={$store.compareType}
+		value={$lastInbox.compareType}
 		on:change={({ detail }) => {
-			$store.compareType = detail;
+			$lastInbox.compareType = detail;
 		}}
 	/>
 
@@ -64,41 +69,47 @@
 	</p>
 {:else if $store.walkthroughStatus === WalkthroughStatuses.setInboxPath}
 	<p>
-		Let's setup which {$store.trackingType.toString()} will be your inbox {$store.trackingType.toString()}.
+		Let's setup which {$lastInbox.trackingType.toString()} will be your inbox
+		{$lastInbox.trackingType.toString()}.
 	</p>
 
-	{#if $store.trackingType === TrackingTypes.note}
-		<ol>
-			<li>
-				Open the note that you want to be your "Inbox" note. It can be
-				called whatever you want, and can be anywhere in your vault.
-			</li>
-			{#if $store.compareType === "compareToBase"}
-				<li>
-					Set the default state of your inbox note. For example, if
-					your note should just have a heading in it when you don't
-					want a notification, add that heading to your note.
-				</li>
-			{/if}
-			<li>
-				Open the command palette with the keyboard shortcut
-				<code>cmd p</code>
-				(<code>ctrl p</code> on Windows) and run the "Set inbox note" command.
-			</li>
-		</ol>
-	{:else if $store.trackingType === TrackingTypes.folder}
+	{#if $lastInbox.trackingType === TrackingTypes.note}
+		<p>
+			Select the note that you want to be notified of when it's contents
+			are changed.
+		</p>
+		<FileAutocomplete
+			placeholder="Inbox.md"
+			value={$lastInbox.path}
+			files={markdownFiles}
+			getLabel={(file) => file.path}
+			on:change={async ({ detail }) => {
+				if (detail !== $lastInbox.path) {
+					await setInboxNote({
+						app,
+						notePath: detail,
+						index: $lastInboxIndex,
+					});
+				}
+			}}
+		/>
+	{:else if $lastInbox.trackingType === TrackingTypes.folder}
 		<p>
 			Select the folder that you want to be notifified of when files are
 			added/removed to this folder outside of Obsidian.
 		</p>
 		<FileAutocomplete
 			placeholder="Inbox"
-			value={$store.inboxNotePath}
+			value={$lastInbox.path}
 			files={folders}
 			getLabel={(file) => file.path}
 			on:change={async ({ detail }) => {
-				if (detail !== $store.inboxNotePath) {
-					await setInboxFolder(detail);
+				if (detail !== $lastInbox.path) {
+					await setInboxFolder({
+						app,
+						folderPath: detail,
+						index: $lastInboxIndex,
+					});
 				}
 			}}
 		/>
@@ -106,7 +117,7 @@
 {:else if $store.walkthroughStatus === WalkthroughStatuses.restartObsidian}
 	<p>Alright, let's verify that this is working.</p>
 
-	{#if $store.trackingType === TrackingTypes.note && $store.compareType === "compareToBase"}
+	{#if $lastInbox.trackingType === TrackingTypes.note && $lastInbox.compareType === "compareToBase"}
 		<ol>
 			<li>
 				Restart Obsidian. You should <i>not</i> get a notification, since
@@ -120,7 +131,7 @@
 				"Set inbox note" command.
 			</li>
 		</ol>
-	{:else if $store.trackingType === TrackingTypes.note && $store.compareType === "compareToLastTracked"}
+	{:else if $lastInbox.trackingType === TrackingTypes.note && $lastInbox.compareType === "compareToLastTracked"}
 		<ol>
 			<li>
 				Restart Obsidian. You should <i>not</i> get a notification, since
@@ -128,14 +139,14 @@
 			</li>
 			<li>
 				Close Obsidian, and add or remove some content to your Inbox
-				note (located at "{$store.inboxNotePath}").
+				note (located at "{$lastInbox.path}").
 			</li>
 			<li>
 				Open Obsidian. You <i>should</i> get a notification, because your
 				"Inbox" note was changed outside of Obsidian.
 			</li>
 		</ol>
-	{:else if $store.trackingType === TrackingTypes.folder}
+	{:else if $lastInbox.trackingType === TrackingTypes.folder}
 		<ol>
 			<li>
 				Restart Obsidian. You should <i>not</i> get a notification, since
@@ -143,7 +154,7 @@
 			</li>
 			<li>
 				Close Obsidian, and add or remove a note to your Inbox folder
-				(located at "{$store.inboxNotePath}").
+				(located at "{$lastInbox.path}").
 			</li>
 			<li>
 				Open Obsidian. You <i>should</i> get a notification, because your

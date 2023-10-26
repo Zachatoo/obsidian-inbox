@@ -1,4 +1,5 @@
-import { TrackingTypes, type InboxPluginSettings } from "src/settings";
+import type { InboxPluginSettingsV2 } from "src/settings/InboxPluginSettingsV2";
+import { TrackingTypes } from "src/settings/TrackingTypes";
 import {
 	WalkthroughStatuses,
 	type WalkthroughStatus,
@@ -56,14 +57,17 @@ const machine: Machine = {
 };
 
 export function transition(
-	state: InboxPluginSettings,
+	state: InboxPluginSettingsV2,
 	action: WalkthroughAction
 ) {
 	const to = machine.states[state.walkthroughStatus][action];
 	if (typeof to === "string") {
 		state.walkthroughStatus = to;
 	} else if (typeof to === "object") {
-		state.walkthroughStatus = to[state.trackingType];
+		const trackingType = state.inboxes.at(-1)?.trackingType;
+		if (trackingType) {
+			state.walkthroughStatus = to[trackingType];
+		}
 	}
 	return state;
 }

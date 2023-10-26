@@ -1,7 +1,6 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import InboxWalkthroughComponent from "./WalkthroughView.svelte";
 import type InboxPlugin from "src/main";
-import type { TrackingType } from "src/settings";
 import { getFolders } from "src/obsidian/vault-helpers";
 
 export const VIEW_TYPE_WALKTHROUGH = "inbox-walkthrough-view";
@@ -31,11 +30,9 @@ export class InboxWalkthroughView extends ItemView {
 		this.component = new InboxWalkthroughComponent({
 			target: this.contentEl,
 			props: {
+				app: this.app,
 				closeWalkthroughView: () => this.closeWalkthroughView(),
-				setTrackingType: (trackingType: TrackingType) =>
-					this.plugin.setTrackingType(trackingType),
-				setInboxFolder: (folderPath: string) =>
-					this.plugin.setInboxFolder(folderPath),
+				markdownFiles: this.app.vault.getMarkdownFiles(),
 				folders: getFolders(this.app.vault),
 			},
 		});
