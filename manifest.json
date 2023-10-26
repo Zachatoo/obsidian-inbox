@@ -1,7 +1,7 @@
 {
 	"id": "inbox",
 	"name": "Inbox",
-	"version": "2.0.1",
+	"version": "3.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Show in app notification if there is data to process in the \"inbox\" note.",
 	"author": "Zachatoo",
