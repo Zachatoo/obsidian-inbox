@@ -19,7 +19,6 @@ import {
 	isInboxPluginSettingsV2,
 } from "./settings/InboxPluginSettingsV2";
 import { migrateSettings } from "./settings/migrate-settings";
-import { TrackingTypes } from "./settings/TrackingTypes";
 import { SettingsTab } from "./settings-tab/SettingsTab";
 import {
 	InboxWalkthroughView,
@@ -27,9 +26,11 @@ import {
 } from "./walkthrough/WalkthroughView";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
 import { DEFAULT_INBOX } from "./settings/Inbox";
+import { registerEvents } from "./register-events";
+import { addCommands } from "./commands";
 
 export default class InboxPlugin extends Plugin {
-	private hasPerformedCheck: boolean;
+	hasPerformedCheck: boolean;
 
 	async onload() {
 		this.hasPerformedCheck = false;
@@ -46,114 +47,8 @@ export default class InboxPlugin extends Plugin {
 			(leaf) => new InboxWalkthroughView(leaf, this)
 		);
 
-		this.addCommand({
-			id: "add-inbox-note",
-			name: "Add inbox note",
-			checkCallback: (checking) => {
-				const { activeEditor: fileInfo } = app.workspace;
-				if (!fileInfo || !fileInfo.file || !fileInfo.editor) {
-					return false;
-				}
-				if (checking) {
-					return true;
-				}
-				this.addInboxNote(fileInfo);
-			},
-		});
-
-		this.registerEvent(
-			this.app.metadataCache.on("changed", async (file, data, cache) => {
-				const settings = get(store);
-				if (this.hasPerformedCheck) {
-					const matchingInboxes = settings.inboxes.filter(
-						(inbox) =>
-							inbox.trackingType === TrackingTypes.note &&
-							inbox.path === file.path
-					);
-					if (matchingInboxes.length > 0) {
-						for (const inbox of matchingInboxes) {
-							inbox.inboxNoteContents = data.trim();
-						}
-						store.set(settings);
-					}
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("create", async (file) => {
-				const settings = get(store);
-				if (this.hasPerformedCheck) {
-					const matchingInboxes = settings.inboxes.filter(
-						(inbox) =>
-							inbox.trackingType === TrackingTypes.folder &&
-							file.path.startsWith(inbox.path)
-					);
-					if (matchingInboxes.length > 0) {
-						for (const inbox of matchingInboxes) {
-							inbox.inboxFolderFiles.push(file.name);
-							inbox.inboxFolderFiles.sort((a, b) =>
-								a.localeCompare(b)
-							);
-						}
-						store.set(settings);
-					}
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("rename", async (file, oldPath) => {
-				const settings = get(store);
-				if (this.hasPerformedCheck) {
-					const oldName = oldPath.split("/").at(-1);
-					const matchingInboxes = settings.inboxes.filter(
-						(inbox) =>
-							inbox.trackingType === TrackingTypes.folder &&
-							inbox.inboxFolderFiles.includes(file.name)
-					);
-					if (matchingInboxes.length > 0) {
-						for (const inbox of matchingInboxes) {
-							inbox.inboxFolderFiles = [
-								...inbox.inboxFolderFiles.filter(
-									(x) => x !== oldName
-								),
-								file.name,
-							];
-							inbox.inboxFolderFiles.sort((a, b) =>
-								a.localeCompare(b)
-							);
-						}
-						store.set(settings);
-					}
-				}
-			})
-		);
-
-		this.registerEvent(
-			this.app.vault.on("delete", async (file) => {
-				const settings = get(store);
-				if (this.hasPerformedCheck) {
-					const matchingInboxes = settings.inboxes.filter(
-						(inbox) =>
-							inbox.trackingType === TrackingTypes.folder &&
-							file.path.startsWith(inbox.path)
-					);
-					if (matchingInboxes.length > 0) {
-						for (const inbox of matchingInboxes) {
-							inbox.inboxFolderFiles =
-								inbox.inboxFolderFiles.filter(
-									(x) => x !== file.name
-								);
-							inbox.inboxFolderFiles.sort((a, b) =>
-								a.localeCompare(b)
-							);
-						}
-						store.set(settings);
-					}
-				}
-			})
-		);
+		addCommands(this);
+		registerEvents(this);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 

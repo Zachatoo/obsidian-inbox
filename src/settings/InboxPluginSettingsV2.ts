@@ -1,4 +1,4 @@
-import type { Inbox } from "./Inbox";
+import { DEFAULT_INBOX, type Inbox } from "./Inbox";
 import type { WalkthroughStatus } from "../walkthrough/WalkthroughStatus";
 
 export interface InboxPluginSettingsV2 {
@@ -13,7 +13,7 @@ export interface InboxPluginSettingsV2 {
 }
 
 export const DEFAULT_SETTINGS: InboxPluginSettingsV2 = Object.freeze({
-	inboxes: [],
+	inboxes: [DEFAULT_INBOX],
 	walkthroughStatus: "unstarted",
 });
 

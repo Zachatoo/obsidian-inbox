@@ -1,7 +1,6 @@
-import { App, PluginSettingTab, TFile } from "obsidian";
+import { App, PluginSettingTab } from "obsidian";
 import type InboxPlugin from "src/main";
 import { getFolders } from "src/obsidian/vault-helpers";
-import { readFile } from "src/obsidian/tabstractfile-helpers";
 import SettingsTabComponent from "./SettingsTab.svelte";
 
 export class SettingsTab extends PluginSettingTab {
@@ -24,7 +23,7 @@ export class SettingsTab extends PluginSettingTab {
 					this.plugin.ensureWalkthroughViewExists(true);
 					this.app.setting.close();
 				},
-				readFile: async (file: TFile) => readFile(this.app, file),
+				app: this.app,
 				markdownFiles: this.app.vault.getMarkdownFiles(),
 				folders: getFolders(this.app.vault),
 			},

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { TAbstractFile, TFile, TFolder } from "obsidian";
+	import type { App, TAbstractFile, TFolder } from "obsidian";
 	import { Button, Icon, SettingItem } from "obsidian-svelte";
 	import store from "src/store";
 	import InboxSettings from "./InboxSettings.svelte";
 
 	export let activateWalkthroughView: () => void;
-	export let readFile: (file: TFile) => Promise<string>;
+	export let app: App;
 	export let markdownFiles: TAbstractFile[];
 	export let folders: TFolder[];
 
@@ -35,7 +35,7 @@
 </div>
 
 {#each $store.inboxes as inbox, index}
-	<InboxSettings {inbox} {index} {readFile} {markdownFiles} {folders} />
+	<InboxSettings {inbox} {index} {app} {markdownFiles} {folders} />
 {/each}
 
 <style>

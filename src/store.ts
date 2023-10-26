@@ -1,8 +1,9 @@
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
 import type { InboxPluginSettingsV2 } from "./settings/InboxPluginSettingsV2";
 import { transition } from "./walkthrough/walkthrough-state-machine";
 import { WalkthroughActions } from "./walkthrough/WalkthroughAction";
+import { DEFAULT_INBOX } from "./settings/Inbox";
 
 function createStore() {
 	const { subscribe, set, update } = writable<InboxPluginSettingsV2>();
@@ -36,15 +37,7 @@ function createStore() {
 
 	function addInbox() {
 		update((settings) => {
-			settings.inboxes.push({
-				trackingType: "note",
-				path: "",
-				compareType: "compareToBase",
-				inboxNoteBaseContents: "",
-				inboxNoteContents: "",
-				inboxFolderFiles: [],
-				noticeDurationSeconds: null,
-			});
+			settings.inboxes.push(DEFAULT_INBOX);
 			return settings;
 		});
 	}
@@ -94,5 +87,15 @@ function createStore() {
 }
 
 const store = createStore();
+
+export const lastInbox = derived(
+	store,
+	(values) => values.inboxes[values.inboxes.length - 1]
+);
+
+export const lastInboxIndex = derived(
+	store,
+	(values) => values.inboxes.length - 1
+);
 
 export default store;

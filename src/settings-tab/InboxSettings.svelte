@@ -1,86 +1,21 @@
 <script lang="ts">
-	import { TFile, type TAbstractFile, TFolder } from "obsidian";
-	import {
-		Button,
-		FileAutocomplete,
-		Icon,
-		NumberInput,
-		TextArea,
-	} from "obsidian-svelte";
-	import { getAllFilesInFolderRecursive } from "src/obsidian/tabstractfile-helpers";
-	import { get } from "svelte/store";
+	import type { TAbstractFile, TFolder, App } from "obsidian";
+	import { Button, FileAutocomplete, Icon, TextArea } from "obsidian-svelte";
 	import store from "src/store";
 	import { CompareTypeSelect } from "src/components";
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
-	import type { TrackingType } from "src/settings/TrackingTypes";
 	import type { Inbox } from "src/settings/Inbox";
-	import { ErrorNotice } from "src/Notice";
+	import {
+		setInboxFolder,
+		setInboxNote,
+		setTrackingType,
+	} from "src/inbox-helpers";
 
 	export let inbox: Inbox;
 	export let index: number;
-	export let readFile: (file: TFile) => Promise<string>;
+	export let app: App;
 	export let markdownFiles: TAbstractFile[];
 	export let folders: TFolder[];
-
-	function setTrackingType(trackingType: TrackingType) {
-		const settings = get(store);
-		const matchingInbox = settings.inboxes.at(index);
-		if (!matchingInbox) {
-			new ErrorNotice(`Failed to find inbox at index ${index}.`);
-			return;
-		}
-		matchingInbox.trackingType = trackingType;
-		matchingInbox.path = "";
-		store.set(settings);
-	}
-
-	async function setInboxNote(notePath: string) {
-		const matchingFile = markdownFiles.find(
-			(file) => file.path === notePath
-		);
-		if (!matchingFile || !(matchingFile instanceof TFile)) {
-			new ErrorNotice(
-				`Failed to set inbox note, ${notePath} could not be found or is not a note.`
-			);
-			return;
-		}
-
-		const settings = get(store);
-		const matchingInbox = settings.inboxes.at(index);
-		if (!matchingInbox) {
-			new ErrorNotice(`Failed to find inbox at index ${index}.`);
-			return;
-		}
-
-		matchingInbox.path = notePath;
-		const contents = await readFile(matchingFile);
-		matchingInbox.inboxNoteContents = contents;
-		store.set(settings);
-	}
-
-	async function setInboxFolder(folderPath: string) {
-		const folder = folders.find((folder) => folder.path === folderPath);
-		if (!folder) {
-			new ErrorNotice(
-				`Failed to set inbox folder, ${folderPath} could not be found.`
-			);
-			return;
-		}
-
-		const settings = get(store);
-		const matchingInbox = settings.inboxes.at(index);
-		if (!matchingInbox) {
-			new ErrorNotice(`Failed to find inbox at index ${index}.`);
-			return;
-		}
-
-		matchingInbox.path = folder.path;
-		const filesInFolder = getAllFilesInFolderRecursive(folder);
-		filesInFolder.sort((a, b) => a.localeCompare(b));
-		matchingInbox.inboxFolderFiles.sort((a, b) => a.localeCompare(b));
-		matchingInbox.inboxFolderFiles = filesInFolder;
-		store.set(settings);
-	}
 
 	function moveInboxUp() {
 		store.moveInboxUp(index);
@@ -101,7 +36,7 @@
 			value={inbox.trackingType}
 			on:change={async ({ detail }) => {
 				if (detail !== inbox.trackingType) {
-					setTrackingType(detail);
+					setTrackingType(detail, index);
 				}
 			}}
 		/>
@@ -114,7 +49,7 @@
 				getLabel={(file) => file.path}
 				on:change={async ({ detail }) => {
 					if (detail !== inbox.path) {
-						await setInboxNote(detail);
+						await setInboxNote({ app, notePath: detail, index });
 					}
 				}}
 			/>
@@ -146,7 +81,11 @@
 				getLabel={(file) => file.path}
 				on:change={async ({ detail }) => {
 					if (detail !== inbox.path) {
-						await setInboxFolder(detail);
+						await setInboxFolder({
+							app,
+							folderPath: detail,
+							index,
+						});
 					}
 				}}
 			/>
