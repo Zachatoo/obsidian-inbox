@@ -1,17 +1,7 @@
-import {
-	Platform,
-	Plugin,
-	TFile,
-	WorkspaceLeaf,
-	type MarkdownFileInfo,
-	TFolder,
-} from "obsidian";
+import { Platform, Plugin, TFile, WorkspaceLeaf, TFolder } from "obsidian";
 import { get } from "svelte/store";
 import store from "./store";
-import {
-	getAllFilesInFolderRecursive,
-	readFile,
-} from "./obsidian/tabstractfile-helpers";
+import { getAllFilesInFolderRecursive } from "./obsidian/tabstractfile-helpers";
 import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import {
@@ -25,9 +15,7 @@ import {
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
-import { DEFAULT_INBOX } from "./settings/Inbox";
 import { registerEvents } from "./register-events";
-import { addCommands } from "./commands";
 
 export default class InboxPlugin extends Plugin {
 	hasPerformedCheck: boolean;
@@ -47,7 +35,6 @@ export default class InboxPlugin extends Plugin {
 			(leaf) => new InboxWalkthroughView(leaf, this)
 		);
 
-		addCommands(this);
 		registerEvents(this);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
@@ -221,26 +208,5 @@ export default class InboxPlugin extends Plugin {
 		}
 
 		new ErrorNotice(`Failed to find note at path ${path}.`);
-	}
-
-	async addInboxNote(fileInfo: MarkdownFileInfo) {
-		try {
-			const file = fileInfo.file;
-			if (!file || !(file instanceof TFile)) {
-				new ErrorNotice(`Failed to add inbox note.\nNo active file.`);
-				return;
-			}
-
-			const contents = await readFile(this.app, file);
-			const settings = get(store);
-			settings.inboxes.push({
-				...DEFAULT_INBOX,
-				path: file.path,
-				inboxNoteContents: contents,
-			});
-			store.set(settings);
-		} catch (err) {
-			new ErrorNotice(`Failed to add inbox note.\n${err}`);
-		}
 	}
 }
