@@ -12,12 +12,6 @@ Recommended to install from the Obsidian community store.
 
 You can manually install this using the [BRAT](https://github.com/TfTHacker/obsidian42-brat) Obsidian plugin. Generic installation instructions are available on that plugin's documentation.
 
-## Commands
-
-### Set inbox note
-
-Sets the [inbox path](#inbox-path) and [inbox base contents](#inbox-base-contents) using the active note path and contents. This command exists to make it easier to set those settings.
-
 ## Settings
 
 ### Track note or folder
