@@ -34,9 +34,11 @@
 	<Button on:click={addInbox}><Icon name="plus" /></Button>
 </div>
 
-{#each $store.inboxes as inbox, index}
-	<InboxSettings {inbox} {index} {app} {markdownFiles} {folders} />
-{/each}
+<div>
+	{#each $store.inboxes as inbox, index}
+		<InboxSettings {inbox} {index} {app} {markdownFiles} {folders} />
+	{/each}
+</div>
 
 <style>
 	.inbox-setting-heading-with-button {
