@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { TAbstractFile, TFolder, App } from "obsidian";
 	import { Button, FileAutocomplete, Icon, TextArea } from "obsidian-svelte";
-	import store from "src/store";
+	import store, { lastInboxIndex } from "src/store";
 	import { CompareTypeSelect } from "src/components";
 	import FileOrFolderSelect from "src/components/FileOrFolderSelect.svelte";
 	import type { Inbox } from "src/settings/Inbox";
@@ -101,7 +101,9 @@
 
 		<Button on:click={moveInboxUp}><Icon name="chevron-up" /></Button>
 		<Button on:click={moveInboxDown}><Icon name="chevron-down" /></Button>
-		<Button on:click={removeInbox}><Icon name="cross" /></Button>
+		{#if index !== $lastInboxIndex}
+			<Button on:click={removeInbox}><Icon name="cross" /></Button>
+		{/if}
 	</div>
 </div>
 

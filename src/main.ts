@@ -76,7 +76,7 @@ export default class InboxPlugin extends Plugin {
 	ensureWalkthroughViewExists(active = false) {
 		const { workspace } = this.app;
 
-		let leaf: WorkspaceLeaf;
+		let leaf: WorkspaceLeaf | null;
 		const existingPluginLeaves = workspace.getLeavesOfType(
 			VIEW_TYPE_WALKTHROUGH
 		);
@@ -87,11 +87,13 @@ export default class InboxPlugin extends Plugin {
 		} else {
 			// View doesn't exist yet, reate it and make it visible
 			leaf = workspace.getRightLeaf(false);
-			workspace.revealLeaf(leaf);
-			leaf.setViewState({ type: VIEW_TYPE_WALKTHROUGH });
+			if (leaf) {
+				workspace.revealLeaf(leaf);
+				leaf.setViewState({ type: VIEW_TYPE_WALKTHROUGH });
+			}
 		}
 
-		if (active) {
+		if (active && leaf) {
 			workspace.setActiveLeaf(leaf);
 		}
 	}

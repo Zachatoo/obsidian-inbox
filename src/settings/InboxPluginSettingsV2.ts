@@ -13,7 +13,7 @@ export interface InboxPluginSettingsV2 {
 }
 
 export const DEFAULT_SETTINGS: InboxPluginSettingsV2 = Object.freeze({
-	inboxes: [DEFAULT_INBOX],
+	inboxes: [{ ...DEFAULT_INBOX }],
 	walkthroughStatus: "unstarted",
 });
 

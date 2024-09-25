@@ -37,7 +37,7 @@ function createStore() {
 
 	function addInbox() {
 		update((settings) => {
-			settings.inboxes.push(DEFAULT_INBOX);
+			settings.inboxes.push({ ...DEFAULT_INBOX });
 			return settings;
 		});
 	}
