@@ -1,48 +1,45 @@
 import { Platform, Plugin, TFile, WorkspaceLeaf, TFolder } from "obsidian";
-import { get } from "svelte/store";
-import store from "./store";
 import { getAllFilesInFolderRecursive } from "./obsidian/tabstractfile-helpers";
 import { findMarkdownLeavesMatchingPath } from "./obsidian/workspace-helpers";
 import { ErrorNotice, InfoNotice } from "./Notice";
 import {
 	DEFAULT_SETTINGS,
+	InboxPluginSettingsV2,
 	isInboxPluginSettingsV2,
 } from "./settings/InboxPluginSettingsV2";
 import { migrateSettings } from "./settings/migrate-settings";
 import { SettingsTab } from "./settings-tab/SettingsTab";
 import {
-	InboxWalkthroughView,
+	// InboxWalkthroughView,
 	VIEW_TYPE_WALKTHROUGH,
 } from "./walkthrough/WalkthroughView";
 import { WalkthroughStatuses } from "./walkthrough/WalkthroughStatus";
 import { registerEvents } from "./register-events";
 
 export default class InboxPlugin extends Plugin {
+	settings: InboxPluginSettingsV2;
 	hasPerformedCheck: boolean;
 
 	async onload() {
 		this.hasPerformedCheck = false;
 		await this.loadSettings();
 
-		this.register(
-			store.subscribe(async (settings) => {
-				await this.saveData(settings);
-			})
-		);
-
-		this.registerView(
-			VIEW_TYPE_WALKTHROUGH,
-			(leaf) => new InboxWalkthroughView(leaf, this)
-		);
+		// this.registerView(
+		// 	VIEW_TYPE_WALKTHROUGH,
+		// 	(leaf) => new InboxWalkthroughView(leaf, this),
+		// );
 
 		registerEvents(this);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
 		this.app.workspace.onLayoutReady(async () => {
-			const settings = get(store);
-			if (settings.walkthroughStatus === WalkthroughStatuses.unstarted) {
-				store.walkthrough.start();
+			if (
+				this.settings.walkthroughStatus ===
+				WalkthroughStatuses.unstarted
+			) {
+				this.settings.walkthroughStatus =
+					WalkthroughStatuses.setCompareFileOrFolder;
 				this.ensureWalkthroughViewExists();
 			} else {
 				await this.notifyIfInboxNeedsProcessing();
@@ -51,7 +48,6 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_WALKTHROUGH);
 		this.hasPerformedCheck = false;
 	}
 
@@ -59,18 +55,22 @@ export default class InboxPlugin extends Plugin {
 		let settings: unknown = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			await this.loadData()
+			await this.loadData(),
 		);
 
 		settings = migrateSettings(settings);
 
 		if (isInboxPluginSettingsV2(settings)) {
-			store.set(settings);
+			this.settings = settings;
 		} else {
 			new ErrorNotice(
-				`Failed to load settings.\nSettings could not be migrated to match schema.\n${settings}`
+				`Failed to load settings.\nSettings could not be migrated to match schema.\n${settings}`,
 			);
 		}
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 
 	ensureWalkthroughViewExists(active = false) {
@@ -78,7 +78,7 @@ export default class InboxPlugin extends Plugin {
 
 		let leaf: WorkspaceLeaf | null;
 		const existingPluginLeaves = workspace.getLeavesOfType(
-			VIEW_TYPE_WALKTHROUGH
+			VIEW_TYPE_WALKTHROUGH,
 		);
 
 		// There's already an existing leaf with our view, do not create leaf
@@ -105,11 +105,10 @@ export default class InboxPlugin extends Plugin {
 	}
 
 	async notifyIfInboxNeedsProcessing() {
-		const settings = get(store);
 		try {
-			if (settings.inboxes.length > 0) {
+			if (this.settings.inboxes.length > 0) {
 				const updatedInboxes = await Promise.all(
-					settings.inboxes.map(async (inbox, index) => {
+					this.settings.inboxes.map(async (inbox) => {
 						if (!inbox.path) {
 							return inbox;
 						}
@@ -120,7 +119,7 @@ export default class InboxPlugin extends Plugin {
 							new ErrorNotice(
 								`Failed to find inbox ${inbox.trackingType.toString()} at path ${
 									inbox.path
-								}.`
+								}.`,
 							);
 							return inbox;
 						}
@@ -150,7 +149,7 @@ export default class InboxPlugin extends Plugin {
 								getAllFilesInFolderRecursive(inboxAbstractFile);
 							filesInFolder.sort((a, b) => a.localeCompare(b));
 							inbox.inboxFolderFiles.sort((a, b) =>
-								a.localeCompare(b)
+								a.localeCompare(b),
 							);
 							shouldNotify =
 								filesInFolder.join("") !==
@@ -165,24 +164,23 @@ export default class InboxPlugin extends Plugin {
 							const baseMessage = `You have data to process in ${inbox.path}`;
 							const message = enableClickToView
 								? `${baseMessage}\nClick to dismiss, or right click to view inbox note.`
-								: `${baseMessage}\nClick to dismiss.`;
+								: `${baseMessage}\nTap to dismiss.`;
 							const notice = new InfoNotice(
 								message,
-								inbox.noticeDurationSeconds ?? undefined
+								inbox.noticeDurationSeconds ?? undefined,
 							);
 
 							if (enableClickToView) {
-								notice.noticeEl.oncontextmenu = () => {
+								notice.messageEl.oncontextmenu = () => {
 									this.ensureLeafAtPathIsActive(inbox.path);
 									notice.hide();
 								};
 							}
 						}
 						return inbox;
-					})
+					}),
 				);
-				settings.inboxes = updatedInboxes;
-				store.set(settings);
+				this.settings.inboxes = updatedInboxes;
 			}
 		} catch (error) {
 			new ErrorNotice(`Failed to process inboxes.\n${error}`);
@@ -193,7 +191,7 @@ export default class InboxPlugin extends Plugin {
 	ensureLeafAtPathIsActive(path: string) {
 		const leavesMatchingPath = findMarkdownLeavesMatchingPath(
 			this.app.workspace,
-			path
+			path,
 		);
 		if (leavesMatchingPath.some(Boolean)) {
 			this.app.workspace.setActiveLeaf(leavesMatchingPath[0], {

@@ -1,5 +1,3 @@
-import { get } from "svelte/store";
-import store from "./store";
 import type { TrackingType } from "./settings/TrackingTypes";
 import { ErrorNotice } from "./Notice";
 import { App, TFile } from "obsidian";
@@ -35,7 +33,7 @@ export async function setInboxNote({
 		.find((file) => file.path === notePath);
 	if (!matchingFile || !(matchingFile instanceof TFile)) {
 		new ErrorNotice(
-			`Failed to set inbox note, ${notePath} could not be found or is not a note.`
+			`Failed to set inbox note, ${notePath} could not be found or is not a note.`,
 		);
 		return;
 	}
@@ -63,11 +61,11 @@ export async function setInboxFolder({
 	index: number;
 }) {
 	const folder = getFolders(app.vault).find(
-		(folder) => folder.path === folderPath
+		(folder) => folder.path === folderPath,
 	);
 	if (!folder) {
 		new ErrorNotice(
-			`Failed to set inbox folder, ${folderPath} could not be found.`
+			`Failed to set inbox folder, ${folderPath} could not be found.`,
 		);
 		return;
 	}
