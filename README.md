@@ -1,6 +1,6 @@
 ![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&label=downloads&query=%24%5B%22inbox%22%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
 
-# Obsidian Inbox
+# Inbox for Obsidian
 
 When using a third party tool to quickly write content to your Obsidian vault without opening your vault, often it's easiest to write it to an "inbox" note or folder to process later.
 
@@ -46,4 +46,4 @@ Duration to show Notice when there is data to process, in seconds. Set to `0` fo
 
 ## Attributions
 
--   Thank you to marcusolsson for [obsidian-svelte](https://github.com/marcusolsson/obsidian-svelte) that I used for creating many of the UI elements.
+- Thank you to marcusolsson for [obsidian-svelte](https://github.com/marcusolsson/obsidian-svelte) that I used for creating many of the UI elements.
